@@ -14,7 +14,7 @@ module.exports = function () {
                         var Model = require(bun.MODULES_PATH + '/' + pluginsConf[i].package + '/index.js');
                     }
                 } catch (e) {
-                    bun.Logger.bunerror(e);
+                    bun.Logger.bunerr(e);
                 }
             
                 if (context[i]) {

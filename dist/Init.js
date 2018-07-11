@@ -107,7 +107,7 @@ class Bun_Init {
                     } else {
                         let filePostfix = filename.substr(pos + 1);
                         if (filePostfix !== 'js') {
-                            bun.Logger.bunError('connot load .' + filePostfix + ' please instead of .js');
+                            bun.Logger.bunerr('connot load .' + filePostfix + ' please instead of .js');
                             // throw new Error('connot load .' + filePostfix + ' please instead of .js' );
                             return '';
                         }
@@ -124,7 +124,7 @@ class Bun_Init {
                     } else {
                         let filePostfix = filepath.substr(pos + 1);
                         if (filePostfix !== 'js') {
-                            bun.Logger.bunError('connot load .' + filePostfix + ' please instead of .js');
+                            bun.Logger.bunerr('connot load .' + filePostfix + ' please instead of .js');
                             // throw new Error('connot load .' + filePostfix + ' please instead of .js' );
                             return '';
                         }
