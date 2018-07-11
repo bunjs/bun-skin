@@ -7,7 +7,7 @@ const fs = require('fs');
  *
  * @class
  */
-class Nb_Init {
+class Bun_Init {
 
     /**
      * 初始化方法
@@ -162,4 +162,4 @@ class Nb_Init {
     }
 }
 
-module.exports = Nb_Init;
+module.exports = Bun_Init;

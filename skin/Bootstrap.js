@@ -6,7 +6,7 @@ const views = require('./middleware/Render.js')
 const catchError = require('./middleware/CatchError.js')
 const serverStaic = require('koa-static')
 const bodyParser = require('koa-bodyparser')
-const Nb_Init = require('./Init.js');
+const Bun_Init = require('./Init.js');
 
 module.exports = function (params) {
     /**
@@ -67,7 +67,7 @@ module.exports = function (params) {
       return '';
     };
 
-    new Nb_Init().init();
+    new Bun_Init().init();
 
     app.listen(port);
 

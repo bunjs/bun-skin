@@ -8,7 +8,7 @@ const views = require('./middleware/Render.js');
 const catchError = require('./middleware/CatchError.js');
 const serverStaic = require('koa-static');
 const bodyParser = require('koa-bodyparser');
-const Nb_Init = require('./Init.js');
+const Bun_Init = require('./Init.js');
 
 module.exports = function (params) {
     /**
@@ -48,9 +48,7 @@ module.exports = function (params) {
     bun.app.use(logger.log4js.koaLogger(logger.reqLog(), {
         format: '[:remote-addr :method :url :status :response-timems][:referrer HTTP/:http-version :user-agent]', level: 'auto'
     }));
-    // bun.app.use(log4js.connectLogger(bun.Logger.getLogger(), {
-    //     format: '[:remote-addr :method :url :status :response-timems][:referrer HTTP/:http-version :user-agent]'//自定义输出格式
-    // }));
+
     // 全局捕获错误
     app.use(catchError);
     app.use(serverStaic(bun.ROOT_PATH + '/static'));
@@ -59,6 +57,7 @@ module.exports = function (params) {
         ext: 'html'
     }));
 
+    //解决后端渲染前端资源时遇到css相关文件报错的问题
     var Module = require('module');
     Module._extensions['.less'] = function (module, fn) {
         return '';
@@ -67,7 +66,7 @@ module.exports = function (params) {
         return '';
     };
 
-    new Nb_Init().init();
+    new Bun_Init().init();
 
     app.listen(port);
 
