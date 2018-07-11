@@ -1,16 +1,17 @@
 'use strict';
 
 /**
- * See: http://mozilla.github.io/nunjucks/api.html#configure
- * @param  {[type]} path nunjucks configure path
- * @param  {[type]} opts nunjucks configure opts
- * @return {[type]}      [description]
+ * 捕获全局错误
+ * @param  {[ctx]} 请求上下文
+ * @param  {[next]} 下一个中间件generator对象
+ * @return {} 
  */
-module.exports = (ctx, next) => {
+module.exports = async (ctx, next) => {
     try {
-        next();
+        await next();
     }
     catch (e) {
+        ctx.status = 500;
         bun.Logger.error(e);
     }
     return;

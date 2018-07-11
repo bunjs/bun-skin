@@ -15,24 +15,8 @@ class Nb_Init {
      * @public
      */
     init() {
-        this.initBaseEnv();
         this.initLibPlugin();
         this.initApp();
-    }
-
-    /**
-     * 初始化全局路径属性
-     *
-     * @private
-     */
-    initBaseEnv() {
-        bun.LOG_PATH = bun.ROOT_PATH + '/logs';
-        bun.CONF_PATH = bun.ROOT_PATH + '/conf';
-        bun.PLUGINS_PATH = bun.ROOT_PATH + '/plugins';
-        bun.APP_PATH = bun.ROOT_PATH + '/app';
-        bun.LIB_PATH = bun.ROOT_PATH + '/libs';
-        bun.TPL_PATH = bun.ROOT_PATH + '/template';
-        bun.MODULES_PATH = bun.ROOT_PATH + '/node_modules';
     }
 
     /**

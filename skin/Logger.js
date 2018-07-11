@@ -1,6 +1,12 @@
-const log4js = require('log4js');
+const log4js = require('koa-log4');
 log4js.configure({
 	appenders: {
+		reqLog: {
+			type: 'dateFile',
+			filename: bun.LOG_PATH + '/app/req.log',
+			pattern: '.yyyy-MM-dd-hh',
+			compress: true
+		},
 		app: {
 			type: 'dateFile',
 			filename: bun.LOG_PATH + '/app/app-worker.log',
@@ -22,7 +28,23 @@ log4js.configure({
 	},
 	categories: {
 		default: {
-			appenders: ['app', 'apperr', 'bunko'],
+			appenders: ['app'],
+			level: 'debug'
+		},
+		reqLog: {
+			appenders: ['reqLog'],
+			level: 'debug'
+		},
+		apperr: {
+			appenders: ['apperr'],
+			level: 'error'
+		},
+		app: {
+			appenders: ['app'],
+			level: 'info'
+		},
+		bunko: {
+			appenders: ['bunko'],
 			level: 'debug'
 		}
 	}
@@ -36,6 +58,10 @@ log4js.configure({
 // logger.fatal('Cheese was breeding ground for listeria.');
 
 module.exports = {
+	log4js: log4js,
+	reqLog: function () {
+		return log4js.getLogger('reqLog');
+	},
 	debug: function (str) {
 		log4js.getLogger('app').info(str)
 	},
