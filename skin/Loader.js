@@ -10,13 +10,17 @@ const fs = require('fs');
  *
  * @param {string} keypath 模块命名时需要去除的路径
  * @param {string} path 要加载的路径
+ * @param {string} name 要加载的文件名，默认*
  * @param {string} context 声明上下文
  * @param {string} type 异步加载or同步加载
  * @param {array} ignore 需要忽略的目录
+ * @param {boolean} isNecessary 是否必要
  */
-function loader(keypath, path, name = '*', context = global, type, ignore = []) {
+function loader({ keypath, path, name = '*', context = global, type = 'sync', ignore = [], isNecessary = false }) {
     if (!fsExistsSync(bun.ROOT_PATH + path)) {
-        bun.Logger.bunwarn('not found ' + bun.ROOT_PATH + path);
+        if (isNecessary) {
+            bun.Logger.bunwarn('bun-loader: Loader not found ' + bun.ROOT_PATH + path);
+        }
         return;
     }
 
@@ -49,7 +53,7 @@ function loader(keypath, path, name = '*', context = global, type, ignore = []) 
             if (ignore.indexOf(filename + '/') !== -1) {
                 return;
             }
-            loader(keypath, path + '/' + filename, name, context, type, ignore);
+            loader({ keypath, path: path + '/' + filename, name, context, type, ignore, isNecessary });
             return;
         } else if (ignore.indexOf(filename) !== -1) {
             return;
@@ -88,7 +92,7 @@ function initModule(context, key, path, type) {
             if (context[key]) {
                 // 如果模块已存在作用域中，则报警并覆盖
                 // throw new Error('Repeated method name: ' + key + ' in file: ' + path);
-                bun.Logger.bunwarn('Repeated method name: ' + key + ' in file: ' + path);
+                bun.Logger.bunwarn('bun-loader: Repeated method name: ' + key + ' in file: ' + path);
             }
             Object.defineProperty(context, key, {
                 get: () => {
@@ -96,7 +100,7 @@ function initModule(context, key, path, type) {
                     if (mod) {
                         return mod;
                     }
-                    bun.Logger.bunwarn('module cannot find path is :' + path);
+                    bun.Logger.bunwarn('bun-loader: module cannot find path is :' + path);
                     // throw new Error('module cannot find path is :' + path);
                 },
                 enumerable: true,
@@ -111,11 +115,11 @@ function initModule(context, key, path, type) {
                 return mod;
             })();
         } else {
-            bun.Logger.bunwarn('module cannot find path is :' + path);
+            bun.Logger.bunwarn('bun-loader: module cannot find path is :' + path);
             // throw new Error('module cannot find path is :' + path);
         }
     } catch (e) {
-        console.log(e);
+        bun.Logger.bunerr('bun-loader: ' + e);
     }
 }
 
@@ -156,4 +160,3 @@ function _getFuncName(path, keypath, filePrefix) {
 }
 
 module.exports = loader;
-    

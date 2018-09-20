@@ -31,7 +31,7 @@ class Bun_Init {
         };
         for (let i in loaderlist) {
             if (loaderlist.hasOwnProperty(i)) {
-                bun.Loader(i, loaderlist[i]);
+                bun.Loader({ keypath: i, path: loaderlist[i] });
             }
         }
         require('./Plugin.js')();
@@ -146,18 +146,28 @@ class Bun_Init {
          */
         let loaderlist = [{
             path: '/app/' + appName + '/action',
-            match: '/app/' + appName
+            match: '/app/' + appName,
+            isNecessary: true
         }, {
             path: '/app/' + appName + '/model',
-            match: '/app/' + appName + '/model'
+            match: '/app/' + appName + '/model',
+            isNecessary: true
         }, {
             path: '/src/' + appName + '/app', // 因为无法知道具体ssr项目下的某个子项目的名称，所以依然采用根目录排除法
             match: '/src/' + appName + '/app',
-            name: 'index'
+            name: 'index',
+            isNecessary: false
         }];
         for (let i = 0; i < loaderlist.length; i++) {
 
-            bun.Loader(loaderlist[i]['match'], loaderlist[i]['path'], loaderlist[i]['name'] || '*', App.prototype, 'async');
+            bun.Loader({
+                keypath: loaderlist[i]['match'],
+                path: loaderlist[i]['path'],
+                name: loaderlist[i]['name'] || '*',
+                context: App.prototype,
+                type: 'async',
+                isNecessary: loaderlist[i]['isNecessary']
+            });
         }
     }
 }
