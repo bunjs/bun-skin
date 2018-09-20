@@ -3,12 +3,6 @@
  * @namespace bun
  */
 global.bun = {};
-
-/**
- * Start bun Logger with cluster mode
- * @since 1.0.0
- */
-exports.Logger = bun.Logger = require('./dist/Logger.js');
 /**
  * Start bun Routes with cluster mode
  * @since 1.0.0
