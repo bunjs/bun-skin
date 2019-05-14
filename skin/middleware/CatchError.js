@@ -12,6 +12,7 @@ module.exports = async (ctx, next) => {
     }
     catch (e) {
         ctx.status = 500;
+        ctx.body = '服务器错误';
         bun.Logger.error(e);
     }
     return;

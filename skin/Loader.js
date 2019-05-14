@@ -13,11 +13,12 @@ const fs = require('fs');
  * @param {string} name 要加载的文件名，默认*
  * @param {string} context 声明上下文
  * @param {string} type 异步加载or同步加载
- * @param {array} ignore 需要忽略的目录
+ * @param {array}  ignore 需要忽略的目录
  * @param {boolean} isNecessary 是否必要
  */
 function loader({ keypath, path, name = '*', context = global, type = 'sync', ignore = [], isNecessary = false }) {
     if (!fsExistsSync(bun.ROOT_PATH + path)) {
+        // 如果必要且找不到对应目录，则报警
         if (isNecessary) {
             bun.Logger.bunwarn('bun-loader: Loader not found ' + bun.ROOT_PATH + path);
         }
@@ -50,20 +51,22 @@ function loader({ keypath, path, name = '*', context = global, type = 'sync', ig
         }
         let stat = fs.lstatSync(bun.ROOT_PATH + path + '/' + filename);
         if (stat.isDirectory()) {
+            // 命中ignore 则直接跳过
             if (ignore.indexOf(filename + '/') !== -1) {
                 return;
             }
+            // 是文件夹继续循环
             loader({ keypath, path: path + '/' + filename, name, context, type, ignore, isNecessary });
             return;
         } else if (ignore.indexOf(filename) !== -1) {
             return;
         }
-        let pos = filename.lastIndexOf('.');
 
+        // 判断文件后缀
+        let pos = filename.lastIndexOf('.');
         if (pos === -1) {
             return;
         }
-
         let filePrefix = filename.substr(0, pos);
         let filePostfix = filename.substr(pos + 1);
         if (filePrefix.length < 1 || filePostfix.length < 1 || filePostfix !== 'js') {
@@ -94,6 +97,10 @@ function initModule(context, key, path, type) {
                 // throw new Error('Repeated method name: ' + key + ' in file: ' + path);
                 bun.Logger.bunwarn('bun-loader: Repeated method name: ' + key + ' in file: ' + path);
             }
+            /**
+             * 这里使用Object.defineProperty实现异步调用模块，只当模块被调用时，才加载
+             * 确保各个app业务代码互不影响，即使业务代码有异常，也不会影响其它app业务
+             */
             Object.defineProperty(context, key, {
                 get: () => {
                     let mod = require(path);
@@ -132,7 +139,15 @@ function fsExistsSync(path) {
     }
     return true;
 }
-// 拼接方法名
+
+/**
+ * 拼接方法名
+ * 
+ * 规则：文件全路径-keypath
+ * 如：path:app/example/action/api/home, keypath: app/example/
+ * 则拼出来的方法名为：Action_Api_Home
+ * @return string
+ */
 function _getFuncName(path, keypath, filePrefix) {
     let newpath = path;
     if (keypath === newpath) {

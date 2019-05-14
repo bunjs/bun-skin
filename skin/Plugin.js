@@ -1,7 +1,7 @@
-var pluginsConf = require(bun.CONF_PATH + '/plugins.js');
+let pluginsConf = require(bun.CONF_PATH + '/plugins.js');
 module.exports = function () {
-    var context = bun;
-    for (var i in pluginsConf) {
+    let context = bun;
+    for (let i in pluginsConf) {
         if (pluginsConf.hasOwnProperty(i)) {
             if (pluginsConf[i].enable) {
 
@@ -9,9 +9,9 @@ module.exports = function () {
                 // 以path属性为先
                 try {
                     if (pluginsConf[i].path) {
-                        var Model = require(pluginsConf[i].path + '/index.js');
+                        let Model = require(pluginsConf[i].path + '/index.js');
                     } else {
-                        var Model = require(bun.MODULES_PATH + '/' + pluginsConf[i].package + '/index.js');
+                        let Model = require(bun.MODULES_PATH + '/' + pluginsConf[i].package + '/index.js');
                     }
                 } catch (e) {
                     bun.Logger.bunerr(e);

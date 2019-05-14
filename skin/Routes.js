@@ -1,3 +1,5 @@
+const Bun_Init = require('./Init.js');
+
 class Routes {
     constructor(appName) {
         this.appName = appName || '';
@@ -7,14 +9,15 @@ class Routes {
         };
     }
     get(obj) {
-        for (var key in obj) {
+        for (let key in obj) {
             if (obj.hasOwnProperty(key)) {
+                // 直接添加route时 this.routes.get[this.appName][key] = this.initCallback(obj[key])
                 this.routes.get[key] = this.initCallback(obj[key])
             }
         }
     }
     post(obj) {
-        for (var key in obj) {
+        for (let key in obj) {
             if (obj.hasOwnProperty(key)) {
                 this.routes.post[key] = this.initCallback(obj[key])
             }
@@ -46,6 +49,7 @@ class Routes {
         }
     }
     mergeAppRoutes(path, approutes) {
+
         // 扩展routes
         let self = this;
         for (let i in approutes) {
@@ -53,7 +57,10 @@ class Routes {
                 _extend(i, approutes[i])
             }
         }
-
+        /**
+         * @private
+         * 结构是否改为self.routes[method][appname][path]
+         */
         function _extend(method, routes) {
             for (let i in routes) {
                 if (routes.hasOwnProperty(i)) {
@@ -69,9 +76,10 @@ class Routes {
      */
     async routerMiddleware(ctx, next) {
         // 中间件
-        let url = ctx.request.path
-        await this.routingMethodExecution(url, ctx)
-        return next()
+        let url = ctx.request.path;
+        await this.routingMethodExecution(url, ctx);
+        
+        return next();
     }
 
     /**

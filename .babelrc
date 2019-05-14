@@ -1,0 +1,19 @@
+{
+	"presets": [
+		[
+			"@babel/preset-env", {
+				"targets": { // 配支持的环境
+
+					"node": "6.0"
+				},
+				"modules": 'commonjs',
+				"corejs": "3.0.0",
+				"debug": false, // debug，编译的时候 console
+				"useBuiltIns": "usage", // 是否开启自动支持 polyfill
+			}
+		]
+	],
+	"plugins": [
+        ["@babel/plugin-proposal-decorators", { "legacy": true }]
+    ]
+}
