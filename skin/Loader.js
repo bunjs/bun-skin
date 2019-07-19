@@ -5,6 +5,7 @@
  */
 
 const fs = require('fs');
+const utils = require('./utils');
 /**
  * Loader方法
  *
@@ -17,17 +18,12 @@ const fs = require('fs');
  * @param {boolean} isNecessary 是否必要
  */
 function loader({ keypath, path, name = '*', context = global, type = 'sync', ignore = [], isNecessary = false }) {
-    if (!fsExistsSync(bun.ROOT_PATH + path)) {
+    if (!utils.fsExistsSync(bun.ROOT_PATH + path)) {
         // 如果必要且找不到对应目录，则报警
         if (isNecessary) {
             bun.Logger.bunwarn('bun-loader: Loader not found ' + bun.ROOT_PATH + path);
         }
         return;
-    }
-
-    // 如果没有后缀，则自动加上后缀，只支持.js
-    if (name.lastIndexOf('.') === -1) {
-        name = name + '.js';
     }
     let fstat = fs.lstatSync(bun.ROOT_PATH + path);
 
@@ -39,16 +35,21 @@ function loader({ keypath, path, name = '*', context = global, type = 'sync', ig
         return;
     }
 
+    // 如果没有后缀，则自动加上后缀，只支持.js
+    if (name.lastIndexOf('.') === -1) {
+        name = name + '.js';
+    }
+    
     let files = fs.readdirSync(bun.ROOT_PATH + path);
     let breaked = 0;// 结束循环
     files.forEach(filename => {
         if (breaked === 1) {
             return;
         }
-        let self = __filename.substring(path.length + 1);
-        if (filename === self) {
-            return;
-        }
+        // let self = filename.substring(path.length + 1);
+        // if (filename === self) {
+        //     return;
+        // }
         let stat = fs.lstatSync(bun.ROOT_PATH + path + '/' + filename);
         if (stat.isDirectory()) {
             // 命中ignore 则直接跳过
@@ -58,20 +59,18 @@ function loader({ keypath, path, name = '*', context = global, type = 'sync', ig
             // 是文件夹继续循环
             loader({ keypath, path: path + '/' + filename, name, context, type, ignore, isNecessary });
             return;
-        } else if (ignore.indexOf(filename) !== -1) {
+        }
+        // 命中ignore 则直接跳过
+        if (ignore.indexOf(filename) !== -1) {
             return;
         }
 
         // 判断文件后缀
-        let pos = filename.lastIndexOf('.');
-        if (pos === -1) {
+        if (!utils.isjs(filename)) {
             return;
         }
-        let filePrefix = filename.substr(0, pos);
-        let filePostfix = filename.substr(pos + 1);
-        if (filePrefix.length < 1 || filePostfix.length < 1 || filePostfix !== 'js') {
-            return;
-        }
+
+        let filePrefix = utils.getFilePrefix(filename);
         // name为*代表匹配目录下所有文件，否则匹配单个文件，如果匹配到具体name则结束文件遍历
         if (name !== '*.js') {
             if (filename !== name) {
@@ -94,7 +93,6 @@ function initModule(context, key, path, type) {
         if (type === 'async') {
             if (context[key]) {
                 // 如果模块已存在作用域中，则报警并覆盖
-                // throw new Error('Repeated method name: ' + key + ' in file: ' + path);
                 bun.Logger.bunwarn('bun-loader: Repeated method name: ' + key + ' in file: ' + path);
             }
             /**
@@ -108,7 +106,6 @@ function initModule(context, key, path, type) {
                         return mod;
                     }
                     bun.Logger.bunwarn('bun-loader: module cannot find path is :' + path);
-                    // throw new Error('module cannot find path is :' + path);
                 },
                 enumerable: true,
                 configurable: false
@@ -123,21 +120,10 @@ function initModule(context, key, path, type) {
             })();
         } else {
             bun.Logger.bunwarn('bun-loader: module cannot find path is :' + path);
-            // throw new Error('module cannot find path is :' + path);
         }
     } catch (e) {
         bun.Logger.bunerr('bun-loader: ' + e);
     }
-}
-
-//检测文件或者文件夹存在 nodeJS
-function fsExistsSync(path) {
-    try{
-        fs.accessSync(path,fs.F_OK);
-    }catch(e){
-        return false;
-    }
-    return true;
 }
 
 /**
@@ -170,7 +156,6 @@ function _getFuncName(path, keypath, filePrefix) {
             return s.toUpperCase();
         }));
     }
-
     return arr.join('_');
 }
 

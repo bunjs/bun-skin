@@ -3,7 +3,6 @@
 		[
 			"@babel/preset-env", {
 				"targets": { // 配支持的环境
-
 					"node": "6.0"
 				},
 				"modules": 'commonjs',

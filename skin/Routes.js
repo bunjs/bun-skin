@@ -1,26 +1,21 @@
-const Bun_Init = require('./Init.js');
 
 class Routes {
     constructor(appName) {
         this.appName = appName || '';
-        this.routes = {
+        this.routesHandle = {
             get: {},
             post: {}
         };
     }
     get(obj) {
-        for (let key in obj) {
-            if (obj.hasOwnProperty(key)) {
-                // 直接添加route时 this.routes.get[this.appName][key] = this.initCallback(obj[key])
-                this.routes.get[key] = this.initCallback(obj[key])
-            }
+        for (let [key, value] of Object.entries(obj)) {
+            // 直接添加route时 this.routes.get[this.appName][key] = this.initCallback(obj[key])
+            this.routesHandle.get['/' + this.appName + key] = this.initCallback(value);
         }
     }
     post(obj) {
-        for (let key in obj) {
-            if (obj.hasOwnProperty(key)) {
-                this.routes.post[key] = this.initCallback(obj[key])
-            }
+        for (let [key, value] of Object.entries(obj)) {
+            this.routesHandle.post['/' + this.appName + key] = this.initCallback(value);
         }
     }
 
@@ -44,82 +39,30 @@ class Routes {
             ctx.renderHtml = async function(path, params) {
                 return await renderHtml(self.appName + '/' + path, params);
             };
-            var oCb = new Cb();
+            // 每次请求都新建一个实例，保证不会互相污染
+            let oCb = new Cb();
+            oCb.beforeExecute && await oCb.beforeExecute.call(oCb, ctx);
             await oCb.execute.call(oCb, ctx);
+            oCb.afterExecute && await oCb.afterExecute.call(oCb, ctx);
         }
     }
-    mergeAppRoutes(path, approutes) {
+
+    /**
+     * merge routesHandle
+     * 
+     * @pubilc
+     * @params appRoutesHandle 要merge的路由处理对象
+     */
+    mergeAppRoutes(appRoutesHandle) {
 
         // 扩展routes
         let self = this;
-        for (let i in approutes) {
-            if (approutes.hasOwnProperty(i)) {
-                _extend(i, approutes[i])
-            }
-        }
-        /**
-         * @private
-         * 结构是否改为self.routes[method][appname][path]
-         */
-        function _extend(method, routes) {
-            for (let i in routes) {
-                if (routes.hasOwnProperty(i)) {
-                    self.routes[method][path + i] = routes[i];
-                }
-            }
-        }
-    }
-
-    /**
-     * @public
-     * router中间件入口方法
-     */
-    async routerMiddleware(ctx, next) {
-        // 中间件
-        let url = ctx.request.path;
-        await this.routingMethodExecution(url, ctx);
-        
-        return next();
-    }
-
-    /**
-     * @private
-     * route中间件处理主方法
-     */
-    async routingMethodExecution(url, ctx) {
-
-        if (ctx.method === 'GET') {
-            if (!this.routes.get[url]) {
-                let apppathar = url.split('/');
-                // 路由从后向前匹配/*，如url为/app/home,则先匹配/app/*，再匹配/*
-                for (let i = apppathar.length; i > 1; i--) {
-                    let apppath = apppathar.slice(0, i).join('/') + '/*';
-                    if (this.routes.get[apppath] && typeof this.routes.get[apppath] === 'function') {
-                        await this.routes.get[apppath](ctx);
-                        return;
-                    }
-                }
-                await goNotfound();
-                return;
-            }
-            else if (typeof this.routes.get[url] !== 'function') {
-                await goNotfound();
-                return;
-            }
-            await this.routes.get[url](ctx);
-        } else if (ctx.method === 'POST') {
-            if (!this.routes.post[url] || typeof this.routes.post[url] !== 'function') {
-                await goNotfound();
-                return;
-            }
-            await this.routes.post[url](ctx);
-        } else {
-            ctx.throw(404, 'connot found')
-        }
-        async function goNotfound() {
-            let Cb = require(bun.APP_PATH + '/404.js');
-            let oCb = new Cb();
-            await oCb.execute.call(oCb, ctx);
+        for (let [method, value] of Object.entries(this.routesHandle)) {
+            this.routesHandle[method] = Object.assign(
+                {},
+                value,
+                appRoutesHandle[method]
+            );
         }
     }
 }

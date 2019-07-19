@@ -1,9 +1,10 @@
 "use strict";
 
-let pluginsConf = require(bun.CONF_PATH + '/plugins.js');
-
 module.exports = function () {
-  let context = bun;
+  let pluginsConf = require(bun.CONF_PATH + '/plugins.js');
+
+  let context = bun.plugins;
+  let Model;
 
   for (let i in pluginsConf) {
     if (pluginsConf.hasOwnProperty(i)) {
@@ -12,9 +13,9 @@ module.exports = function () {
         // 以path属性为先
         try {
           if (pluginsConf[i].path) {
-            let Model = require(pluginsConf[i].path + '/index.js');
+            Model = require(pluginsConf[i].path + '/index.js');
           } else {
-            let Model = require(bun.MODULES_PATH + '/' + pluginsConf[i].package + '/index.js');
+            Model = require(bun.MODULES_PATH + '/' + pluginsConf[i].package + '/index.js');
           }
         } catch (e) {
           bun.Logger.bunerr(e);

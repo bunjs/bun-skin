@@ -1,40 +1,52 @@
 "use strict";
 
-require("core-js/modules/es.array.slice");
+require("core-js/modules/es.symbol.description");
+
+require("core-js/modules/es.array.iterator");
+
+require("core-js/modules/es.object.entries");
 
 require("core-js/modules/es.promise");
-
-require("core-js/modules/es.string.split");
 
 function asyncGeneratorStep(gen, resolve, reject, _next, _throw, key, arg) { try { var info = gen[key](arg); var value = info.value; } catch (error) { reject(error); return; } if (info.done) { resolve(value); } else { Promise.resolve(value).then(_next, _throw); } }
 
 function _asyncToGenerator(fn) { return function () { var self = this, args = arguments; return new Promise(function (resolve, reject) { var gen = fn.apply(self, args); function _next(value) { asyncGeneratorStep(gen, resolve, reject, _next, _throw, "next", value); } function _throw(err) { asyncGeneratorStep(gen, resolve, reject, _next, _throw, "throw", err); } _next(undefined); }); }; }
 
-const Bun_Init = require('./Init.js');
+function _slicedToArray(arr, i) { return _arrayWithHoles(arr) || _iterableToArrayLimit(arr, i) || _nonIterableRest(); }
+
+function _nonIterableRest() { throw new TypeError("Invalid attempt to destructure non-iterable instance"); }
+
+function _iterableToArrayLimit(arr, i) { var _arr = []; var _n = true; var _d = false; var _e = undefined; try { for (var _i = arr[Symbol.iterator](), _s; !(_n = (_s = _i.next()).done); _n = true) { _arr.push(_s.value); if (i && _arr.length === i) break; } } catch (err) { _d = true; _e = err; } finally { try { if (!_n && _i["return"] != null) _i["return"](); } finally { if (_d) throw _e; } } return _arr; }
+
+function _arrayWithHoles(arr) { if (Array.isArray(arr)) return arr; }
 
 class Routes {
   constructor(appName) {
     this.appName = appName || '';
-    this.routes = {
+    this.routesHandle = {
       get: {},
       post: {}
     };
   }
 
   get(obj) {
-    for (let key in obj) {
-      if (obj.hasOwnProperty(key)) {
-        // 直接添加route时 this.routes.get[this.appName][key] = this.initCallback(obj[key])
-        this.routes.get[key] = this.initCallback(obj[key]);
-      }
+    for (var _i = 0, _Object$entries = Object.entries(obj); _i < _Object$entries.length; _i++) {
+      let _Object$entries$_i = _slicedToArray(_Object$entries[_i], 2),
+          key = _Object$entries$_i[0],
+          value = _Object$entries$_i[1];
+
+      // 直接添加route时 this.routes.get[this.appName][key] = this.initCallback(obj[key])
+      this.routesHandle.get['/' + this.appName + key] = this.initCallback(value);
     }
   }
 
   post(obj) {
-    for (let key in obj) {
-      if (obj.hasOwnProperty(key)) {
-        this.routes.post[key] = this.initCallback(obj[key]);
-      }
+    for (var _i2 = 0, _Object$entries2 = Object.entries(obj); _i2 < _Object$entries2.length; _i2++) {
+      let _Object$entries2$_i = _slicedToArray(_Object$entries2[_i2], 2),
+          key = _Object$entries2$_i[0],
+          value = _Object$entries2$_i[1];
+
+      this.routesHandle.post['/' + this.appName + key] = this.initCallback(value);
     }
   }
   /**
@@ -81,10 +93,13 @@ class Routes {
             return function (_x4, _x5) {
               return _ref3.apply(this, arguments);
             };
-          }();
+          }(); // 每次请求都新建一个实例，保证不会互相污染
 
-          var oCb = new Cb();
+
+          let oCb = new Cb();
+          oCb.beforeExecute && (yield oCb.beforeExecute.call(oCb, ctx));
           yield oCb.execute.call(oCb, ctx);
+          oCb.afterExecute && (yield oCb.afterExecute.call(oCb, ctx));
         });
 
         return function (_x) {
@@ -93,102 +108,25 @@ class Routes {
       }()
     );
   }
+  /**
+   * merge routesHandle
+   * 
+   * @pubilc
+   * @params appRoutesHandle 要merge的路由处理对象
+   */
 
-  mergeAppRoutes(path, approutes) {
+
+  mergeAppRoutes(appRoutesHandle) {
     // 扩展routes
     let self = this;
 
-    for (let i in approutes) {
-      if (approutes.hasOwnProperty(i)) {
-        _extend(i, approutes[i]);
-      }
+    for (var _i3 = 0, _Object$entries3 = Object.entries(this.routesHandle); _i3 < _Object$entries3.length; _i3++) {
+      let _Object$entries3$_i = _slicedToArray(_Object$entries3[_i3], 2),
+          method = _Object$entries3$_i[0],
+          value = _Object$entries3$_i[1];
+
+      this.routesHandle[method] = Object.assign({}, value, appRoutesHandle[method]);
     }
-    /**
-     * @private
-     * 结构是否改为self.routes[method][appname][path]
-     */
-
-
-    function _extend(method, routes) {
-      for (let i in routes) {
-        if (routes.hasOwnProperty(i)) {
-          self.routes[method][path + i] = routes[i];
-        }
-      }
-    }
-  }
-  /**
-   * @public
-   * router中间件入口方法
-   */
-
-
-  routerMiddleware(ctx, next) {
-    var _this = this;
-
-    return _asyncToGenerator(function* () {
-      // 中间件
-      let url = ctx.request.path;
-      yield _this.routingMethodExecution(url, ctx);
-      return next();
-    })();
-  }
-  /**
-   * @private
-   * route中间件处理主方法
-   */
-
-
-  routingMethodExecution(url, ctx) {
-    var _this2 = this;
-
-    return _asyncToGenerator(function* () {
-      if (ctx.method === 'GET') {
-        if (!_this2.routes.get[url]) {
-          let apppathar = url.split('/'); // 路由从后向前匹配/*，如url为/app/home,则先匹配/app/*，再匹配/*
-
-          for (let i = apppathar.length; i > 1; i--) {
-            let apppath = apppathar.slice(0, i).join('/') + '/*';
-
-            if (_this2.routes.get[apppath] && typeof _this2.routes.get[apppath] === 'function') {
-              yield _this2.routes.get[apppath](ctx);
-              return;
-            }
-          }
-
-          yield goNotfound();
-          return;
-        } else if (typeof _this2.routes.get[url] !== 'function') {
-          yield goNotfound();
-          return;
-        }
-
-        yield _this2.routes.get[url](ctx);
-      } else if (ctx.method === 'POST') {
-        if (!_this2.routes.post[url] || typeof _this2.routes.post[url] !== 'function') {
-          yield goNotfound();
-          return;
-        }
-
-        yield _this2.routes.post[url](ctx);
-      } else {
-        ctx.throw(404, 'connot found');
-      }
-
-      function goNotfound() {
-        return _goNotfound.apply(this, arguments);
-      }
-
-      function _goNotfound() {
-        _goNotfound = _asyncToGenerator(function* () {
-          let Cb = require(bun.APP_PATH + '/404.js');
-
-          let oCb = new Cb();
-          yield oCb.execute.call(oCb, ctx);
-        });
-        return _goNotfound.apply(this, arguments);
-      }
-    })();
   }
 
 }

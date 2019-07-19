@@ -43,7 +43,7 @@ module.exports = (path, opts) => {
                 render(path +'/'+view + ext, state, (err, html) => {
                     if (err) return rej(err);
                     // Render with response content-type, fallback to text/html
-                    ctx.type = ctx.type || 'text/html';
+                    ctx.type = 'text/html';
                     ctx.body = html;
                     res();
                 });
