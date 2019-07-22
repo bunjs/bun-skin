@@ -8,7 +8,7 @@
     "build": "tslint --fix --project . ./src/**/*.ts && rm -rf ./dist && tsc",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
-  "author": "liguohui01",
+  "author": "bunko",
   "license": "ISC",
   "husky": {
     "hooks": {
@@ -16,7 +16,7 @@
     }
   },
   "lint-staged": {
-    "*.{ts}": [
+    "*.ts": [
       "tslint --fix --project . ./src/**/*.ts",
       "git add"
     ]
