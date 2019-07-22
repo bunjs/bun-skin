@@ -1,0 +1,1 @@
+{"version":3,"file":"err.js","sourceRoot":"","sources":["../../../src/skin/config/err.ts"],"names":[],"mappings":";AAAA,iBAAS;IACL,+BAA+B,EAAE;QAC7B,IAAI,EAAE,GAAG;QACT,GAAG,EAAE,kDAAkD;QACvD,KAAK,EAAE,OAAO;KACjB;IACD,0BAA0B,EAAE;QACxB,IAAI,EAAE,GAAG;QACT,GAAG,EAAE,kBAAkB;QACvB,KAAK,EAAE,OAAO;KACjB;CACJ,CAAA"}

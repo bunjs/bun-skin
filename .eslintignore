@@ -1,0 +1,8 @@
+dist/**
+node_modules/**
+.gitignore
+*.sh
+*.json
+mock
+*.cloud
+server/**

@@ -1,0 +1,27 @@
+{
+    "extends": ["tslint:recommended", "tslint-config-prettier"],
+    "rules": {
+        "semicolon": true,
+        "eofline": false,
+        "no-console": false,
+        "object-literal-sort-keys": false,
+        "indent": [true, "spaces", 4],
+        "interface-name": [false],
+        "no-empty-interface": false,
+        "jsdoc-format": false,
+        "no-redundant-jsdoc": false,
+        "no-unused-expression": [true, "allow-fast-null-checks"],
+        "variable-name": [
+            true,
+            "allow-leading-underscore", // 允许开头的下划线，例如 _test
+            "allow-snake-case",
+            "ban-keywords",
+            "allow-leading-underscore"
+        ]
+    },
+    "linterOptions": {
+        "exclude": [
+            "**/node_modules/**"
+        ]
+    }
+}

@@ -1,26 +1,44 @@
 {
   "name": "bun-skin",
-  "version": "1.5.1",
+  "version": "1.6.0",
   "description": "",
-  "main": "index.js",
+  "main": "dist/index.js",
+  "types": "src/bun.d.ts",
   "scripts": {
-    "build": "npx babel ./skin --out-dir ./dist",
+    "build": "tslint --fix --project . ./src/**/*.ts && rm -rf ./dist && tsc",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "liguohui01",
   "license": "ISC",
+  "husky": {
+    "hooks": {
+      "pre-commit": "lint-staged"
+    }
+  },
+  "lint-staged": {
+    "*.{ts}": [
+      "npm run build",
+      "git add"
+    ]
+  },
   "dependencies": {
+    "@types/koa": "^2.0.49",
+    "@types/koa-bodyparser": "^4.3.0",
+    "@types/koa-log4": "^2.3.1",
+    "@types/koa-static": "^4.0.1",
+    "@types/pug": "^2.0.4",
     "core-js": "^3.0.1",
-    "koa": "^2.3.0",
-    "koa-bodyparser": "^4.2.0",
+    "koa": "^2.7.0",
+    "koa-bodyparser": "^4.2.1",
     "koa-log4": "^2.3.2",
-    "koa-static": "^4.0.1",
-    "pug": "^2.0.0-rc.3"
+    "koa-static": "^5.0.0",
+    "pug": "^2.0.4",
+    "typescript": "^3.5.3"
   },
   "devDependencies": {
-    "@babel/cli": "^7.4.4",
-    "@babel/core": "^7.4.4",
-    "@babel/plugin-proposal-decorators": "^7.4.4",
-    "@babel/preset-env": "^7.1.0"
+    "husky": "^2.2.0",
+    "lint-staged": "^8.1.6",
+    "tslint": "^5.18.0",
+    "tslint-config-prettier": "^1.18.0"
   }
 }
