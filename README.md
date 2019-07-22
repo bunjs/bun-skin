@@ -93,14 +93,32 @@ bun restart myProject //重启项目
 bun stop myProject //停止项目
 bun run myProject -w //自动重启项目
 ```
+## vue
 我们对react和vue等热门前端框架进行了支持，
 如果你想使用vue，你可以这样创建app：
 
 ```
 bun init vueapp
 ```
-如之前一样部署完成后，
+我们还对vue做了ssr支持，你需要这样使用：
+```
+bun init vueappssr
+```
+你还需要引入一个ssr插件：
+```
+npm i --save bun-vuessr-plugin
+```
+然后在conf/plugins.js中做好声明即可使用：
 
+```
+exports.SSR = {
+  enable: true,
+  package: 'bun-vuessr-plugin'
+};
+```
+插件的具体使用方法请移步这里：https://github.com/bunjs/bun-vuessr-plugin
+
+## react
 如果你想使用react，你可以这样创建app：
 
 ```
@@ -116,7 +134,7 @@ npm i --save bun-reactssr-plugin
 然后在conf/plugins.js中做好声明即可使用：
 
 ```
-exports.ral = {
+exports.SSR = {
   enable: true,
   package: 'bun-reactssr-plugin'
 };
