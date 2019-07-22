@@ -57,7 +57,11 @@ class Bun extends Koa {
         this.emitter("initApp", this.app);
     }
     setLib() {
-        this.Loader({ keypath: "lib", path: "/lib", context: this.lib });
+        this.Loader({
+            keypath: "lib",
+            path: "/lib",
+            context: this.lib
+        });
         this.emitter("setLib", this.lib);
     }
     setPlugins() {

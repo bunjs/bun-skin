@@ -7,10 +7,9 @@ import Bun = require("./Core");
 /**
  * 接受参数
  * @params ROOT_PATH app根目录执行路径
- * @params port 启动端口号 默认4000
+ * @params port 启动端口号 默认8000
  */
 export = (params: Params) => {
-    // let bun: any;
     try {
         (global as any).bun = new Bun("bun", params);
         bun.setException();
