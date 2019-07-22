@@ -100,7 +100,9 @@ bun run myProject -w //自动重启项目
 ```
 bun init vueapp
 ```
-我们还对vue做了ssr支持，你需要这样使用：
+打开http://localhost:8000/myapp/ 即可看到示例页面
+
+我们还对vue做了ssr支持，你需要创建一个新的vueappssr：
 ```
 bun init vueappssr
 ```
@@ -124,9 +126,10 @@ exports.SSR = {
 ```
 bun init reactapp
 ```
-打开http://localhost:8000/myapp/example 即可看到示例页面
+打开http://localhost:8000/myapp/ 即可看到示例页面
 
-我们还对react做了ssr支持，并抽象为一个插件，你可以很方便在project目录下安装插件：
+我们还对react做了ssr支持，
+针对react，你不需要创建ssrapp，只需安装一个插件，你可以很方便在project目录下安装插件：
 
 ```
 npm i --save bun-reactssr-plugin
