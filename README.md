@@ -33,7 +33,7 @@ bun是一整套工具的合集
 
 - [node](https://nodejs.org) (v6.0.0+)
 - [koa](https://koa.bootcss.com) (v2.0.0+)
-- [typescript] (https://www.typescriptlang.org/) (v3.5.0+)
+- [typescript](https://www.typescriptlang.org/) (v3.5.0+)
 
 ## 安装：
 
