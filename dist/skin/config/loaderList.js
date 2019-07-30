@@ -5,6 +5,10 @@ module.exports = (appName) => {
             match: '/app/' + appName,
             isNecessary: true
         }, {
+            path: '/app/' + appName + '/controller',
+            match: '/app/' + appName,
+            isNecessary: true
+        }, {
             path: '/app/' + appName + '/model',
             match: '/app/' + appName + '/model',
             isNecessary: true

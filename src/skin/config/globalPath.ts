@@ -1,6 +1,6 @@
 export = (ROOT_PATH: string) => {
     return {
-        ROOT_PATH: ROOT_PATH,
+        ROOT_PATH,
         LOG_PATH: ROOT_PATH + '/logs',
         CONF_PATH: ROOT_PATH + '/conf',
         PLUGINS_PATH: ROOT_PATH + '/plugins',
@@ -10,4 +10,4 @@ export = (ROOT_PATH: string) => {
         STATIC_PATH: ROOT_PATH + '/static',
         MODULES_PATH: ROOT_PATH + '/node_modules'
     };
-}
+};

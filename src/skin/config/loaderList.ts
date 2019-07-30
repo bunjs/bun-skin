@@ -12,6 +12,10 @@ export = (appName: string) => {
         match: '/app/' + appName,
         isNecessary: true
     }, {
+        path: '/app/' + appName + '/controller',
+        match: '/app/' + appName,
+        isNecessary: true
+    }, {
         path: '/app/' + appName + '/model',
         match: '/app/' + appName + '/model',
         isNecessary: true
@@ -21,4 +25,4 @@ export = (appName: string) => {
         name: 'index',
         isNecessary: false
     }];
-}
+};

@@ -94,12 +94,12 @@ export = (appName: string) => {
      * @private
      * @params appName app名称
      */
-    const runAppController = (app: any) => {
+    const runAppController = curry((app: any) => {
         const Controller_Main = require(bun.globalPath.APP_PATH + "/" + app.name + "/controller/Main.js");
         const main = new Controller_Main();
         main.execute();
         return app;
-    };
+    });
 
     // app公共类附在全局bun上，方便继承
     // 加一层class命名空间是担心用户app命名与bun自由属性冲突

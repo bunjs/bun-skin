@@ -108,42 +108,47 @@ function loader(obj: Loader) {
 }
 // 定义模块
 function initModule(context: any, key: string, path: string, type?: string) {
-    try {
-        let mod: any;
-        if (type === "async") {
-            if (context[key]) {
-                // 如果模块已存在作用域中，则报警并覆盖
-                bun.Logger.bunwarn("bun-loader: Repeated method name: " + key + " in file: " + path);
-            }
-            /**
-             * 这里使用Object.defineProperty实现异步调用模块，只当模块被调用时，才加载
-             * 确保各个app业务代码互不影响，即使业务代码有异常，也不会影响其它app业务
-             */
-            Object.defineProperty(context, key, {
-                get: () => {
-                    mod = require(path);
-                    if (mod) {
-                        return mod;
-                    }
-                    bun.Logger.bunwarn("bun-loader: module cannot find path is :" + path);
-                },
-                enumerable: true,
-                configurable: false,
-            });
-            return;
+    let mod: any;
+    if (type === "async") {
+        if (context[key]) {
+            // 如果模块已存在作用域中，则报警并覆盖
+            bun.Logger.bunwarn("bun-loader: Repeated method name: " + key + " in file: " + path);
         }
-        mod = require(path);
+        /**
+         * 这里使用Object.defineProperty实现异步调用模块，只当模块被调用时，才加载
+         * 确保各个app业务代码互不影响，即使业务代码有异常，也不会影响其它app业务
+         */
+        Object.defineProperty(context, key, {
+            get: () => {
+                mod = loadModule(path);
+                if (mod) {
+                    return mod;
+                }
+                bun.Logger.bunwarn("bun-loader: module cannot find path is :" + path);
+            },
+            enumerable: true,
+            configurable: false,
+        });
+        return;
+    }
+    mod = loadModule(path);
+    if (mod) {
+        context[key] = (() => {
+            return mod;
+        })();
+    } else {
+        bun.Logger.bunwarn("bun-loader: module cannot find path is :" + path);
+    }
+}
 
-        if (mod) {
-            context[key] = (() => {
-                return mod;
-            })();
-        } else {
-            bun.Logger.bunwarn("bun-loader: module cannot find path is :" + path);
-        }
+function loadModule(path: string): any {
+    let mod: any;
+    try {
+        mod = require(path);
     } catch (e) {
         bun.Logger.bunerr("bun-loader: " + e);
     }
+    return mod;
 }
 
 /**

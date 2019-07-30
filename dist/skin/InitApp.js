@@ -56,12 +56,12 @@ module.exports = (appName) => {
         }
         return app;
     });
-    const runAppController = (app) => {
+    const runAppController = utils_1.curry((app) => {
         const Controller_Main = require(bun.globalPath.APP_PATH + "/" + app.name + "/controller/Main.js");
         const main = new Controller_Main();
         main.execute();
         return app;
-    };
+    });
     const registerGlobalClass = utils_1.curry((app) => {
         if (!bun.class) {
             bun.class = {

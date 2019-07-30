@@ -1,7 +1,7 @@
 "use strict";
 module.exports = (ROOT_PATH) => {
     return {
-        ROOT_PATH: ROOT_PATH,
+        ROOT_PATH,
         LOG_PATH: ROOT_PATH + '/logs',
         CONF_PATH: ROOT_PATH + '/conf',
         PLUGINS_PATH: ROOT_PATH + '/plugins',

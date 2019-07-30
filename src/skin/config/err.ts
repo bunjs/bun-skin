@@ -9,4 +9,4 @@ export = {
         msg: 'plugin not found',
         level: 'error'
     },
-}
+};

@@ -1,6 +1,6 @@
+import err = require('./err');
 import globalPath = require('./globalPath');
 import loaderList = require('./loaderList');
-import err = require('./err');
 
 const viewExt: string = 'html';
 const defaultPort: string | number = 8000;

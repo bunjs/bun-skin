@@ -12,6 +12,7 @@ import Bun = require("./Core");
 export = (params: Params) => {
     try {
         (global as any).bun = new Bun("bun", params);
+        // todo 执行后注销这些方法，以防外部调用
         bun.setException();
         bun.setErrHandle();
         bun.setReqLog();

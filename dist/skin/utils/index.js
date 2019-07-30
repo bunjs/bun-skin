@@ -11,32 +11,32 @@ exports.fsExistsSync = (path) => {
     return true;
 };
 exports.isjs = (filename) => {
-    let pos = filename.lastIndexOf('.');
+    const pos = filename.lastIndexOf('.');
     if (pos === -1) {
         return false;
     }
-    let filePrefix = filename.substr(0, pos);
-    let filePostfix = filename.substr(pos + 1);
+    const filePrefix = filename.substr(0, pos);
+    const filePostfix = filename.substr(pos + 1);
     if (filePrefix.length < 1 || filePostfix.length < 1 || filePostfix !== 'js') {
         return false;
     }
     return true;
 };
 exports.getFilePrefix = (filename) => {
-    let pos = filename.lastIndexOf('.');
+    const pos = filename.lastIndexOf('.');
     if (pos === -1) {
         return false;
     }
     return filename.substr(0, pos);
 };
 exports.deepFreeze = (function freeze(obj, ignore) {
-    let propNames = Object.getOwnPropertyNames(obj);
-    propNames.forEach(function (name) {
+    const propNames = Object.getOwnPropertyNames(obj);
+    propNames.forEach((name) => {
         if (name === ignore) {
             return;
         }
-        let prop = obj[name];
-        if (typeof prop == 'object' && prop !== null) {
+        const prop = obj[name];
+        if (typeof prop === 'object' && prop !== null) {
             freeze(prop);
         }
     });
@@ -53,7 +53,7 @@ exports.set = (object, path, val) => {
     }, object)[path.pop()] = val), object;
 };
 exports.curry = (fn) => {
-    let limit = fn.length;
+    const limit = fn.length;
     return function _curry(...args) {
         if (args.length === limit) {
             return fn.apply(null, args);
@@ -66,8 +66,8 @@ exports.curry = (fn) => {
     };
 };
 exports.run = (...fns) => {
-    let fnArra = Array.prototype.slice.call(fns, 0);
-    let fn1 = fnArra.pop();
+    const fnArra = Array.prototype.slice.call(fns, 0);
+    const fn1 = fnArra.pop();
     return (...args) => {
         return fnArra.reverse().reduce((val, fn) => {
             return fn(val);
