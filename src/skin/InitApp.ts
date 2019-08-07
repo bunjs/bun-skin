@@ -1,5 +1,5 @@
 import fs = require("fs");
-import { err, loaderList } from "./config";
+import { appLoaderList, err } from "./config";
 import { curry, run } from "./utils";
 // import injectTapEventPlugin from 'react-tap-event-plugin';
 
@@ -119,7 +119,7 @@ export = (appName: string) => {
         runAppController,
         registerGlobalClass,
         registerConfFun,
-        registerAppAttributes(loaderList(appName)),
+        registerAppAttributes(appLoaderList(appName)),
         initAppClass,
     );
 

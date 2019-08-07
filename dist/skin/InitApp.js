@@ -73,7 +73,7 @@ module.exports = (appName) => {
         }
         return app;
     });
-    const initApp = utils_1.run(runAppController, registerGlobalClass, registerConfFun, registerAppAttributes(config_1.loaderList(appName)), initAppClass);
+    const initApp = utils_1.run(runAppController, registerGlobalClass, registerConfFun, registerAppAttributes(config_1.appLoaderList(appName)), initAppClass);
     return initApp(appName);
 };
 //# sourceMappingURL=InitApp.js.map

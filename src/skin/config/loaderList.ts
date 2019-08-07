@@ -6,23 +6,23 @@
  * model：Services_Data_ApiData
  * 
  */
-export = (appName: string) => {
+export const appLoaderList = (appName: string) => {
     return [{
-        path: '/app/' + appName + '/action',
-        match: '/app/' + appName,
-        isNecessary: true
-    }, {
-        path: '/app/' + appName + '/controller',
-        match: '/app/' + appName,
-        isNecessary: true
-    }, {
-        path: '/app/' + appName + '/model',
-        match: '/app/' + appName + '/model',
-        isNecessary: true
-    }, {
-        path: '/src/' + appName + '/app/base',
+        path: '/src/' + appName + '/app/base/index.js',
         match: '/src/' + appName + '/app',
-        name: 'index',
         isNecessary: false
     }];
 };
+
+export const mvcLoaderList = [
+    {
+        path: '/action',
+        isNecessary: true
+    }, {
+        path: '/controller',
+        isNecessary: true
+    }, {
+        path: '/model',
+        isNecessary: true
+    }
+];

@@ -1,22 +1,22 @@
 "use strict";
-module.exports = (appName) => {
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.appLoaderList = (appName) => {
     return [{
-            path: '/app/' + appName + '/action',
-            match: '/app/' + appName,
-            isNecessary: true
-        }, {
-            path: '/app/' + appName + '/controller',
-            match: '/app/' + appName,
-            isNecessary: true
-        }, {
-            path: '/app/' + appName + '/model',
-            match: '/app/' + appName + '/model',
-            isNecessary: true
-        }, {
-            path: '/src/' + appName + '/app/base',
+            path: '/src/' + appName + '/app/base/index.js',
             match: '/src/' + appName + '/app',
-            name: 'index',
             isNecessary: false
         }];
 };
+exports.mvcLoaderList = [
+    {
+        path: '/action',
+        isNecessary: true
+    }, {
+        path: '/controller',
+        isNecessary: true
+    }, {
+        path: '/model',
+        isNecessary: true
+    }
+];
 //# sourceMappingURL=loaderList.js.map

@@ -7,25 +7,59 @@
 import fs = require("fs");
 import { Loader } from "../interface";
 import utils = require("./utils");
+
+/**
+ * 获取全局类的映射方法
+ *
+ * @param {string} appName 应用名
+ * @param {object} loaderItem 要加载的全局模块的路径
+ */
+function getGlobalModuleByPath(appName: string, loaderItem: Loader) {
+    const res: any = {};
+    const appPath = '/app/' + appName;
+    const keypath = '/app/' + appName;
+    let { path, ignore, isNecessary } = loaderItem;
+    ignore = ignore || [];
+    isNecessary = isNecessary || false;
+    path = appPath + path;
+
+    loader({ path, keypath, context: res, ignore, isNecessary, isGetMap: true });
+    return res;
+}
+
+/**
+ * 获取全局类的映射方法
+ *
+ * @param {string} appName 应用名
+ * @param {array} loadList 要加载的全局模块配置
+ */
+export const getGlobalModule = (appName: string, loadList: any) => {
+    let map: any = {};
+    loadList.forEach((item: Loader) => {
+        map = {...map, ...getGlobalModuleByPath(appName, item)};
+    });
+    bun.globalModule[appName] = map;
+};
+
 /**
  * Loader方法
  *
  * @param {string} keypath 模块命名时需要去除的路径
  * @param {string} path 要加载的路径
- * @param {string} name 要加载的文件名，默认*
  * @param {string} context 声明上下文
  * @param {string} type 异步加载or同步加载
  * @param {array}  ignore 需要忽略的目录
  * @param {boolean} isNecessary 是否必要
+ * @param {boolean} isGetMap 是否只设置路径映射
  */
-function loader(obj: Loader) {
-    let { keypath, path, name, context, type, ignore, isNecessary } = obj;
+export const loader = (obj: Loader) => {
+    let { keypath, path, context, type, ignore, isNecessary, isGetMap } = obj;
     keypath = keypath || '';
-    name = name || "*";
     context = context || global;
     type = type || "sync";
     ignore = ignore || [];
     isNecessary = isNecessary || false;
+    isGetMap = isGetMap || false;
     path = bun.globalPath.ROOT_PATH + path;
 
     let key: string;
@@ -40,27 +74,17 @@ function loader(obj: Loader) {
 
     if (fstat.isFile()) {
         // 对文件进行直接引入操作
-        key = _getFuncName(path, keypath);
-
-        initModule(context, key, path, type);
+        key = getFuncName(path, keypath);
+        if(isGetMap) {
+            context[key] = path;
+        } else {
+            initModule(context, key, path, type);
+        }
         return;
     }
 
-    // 如果没有后缀，则自动加上后缀，只支持.js
-    if (name.lastIndexOf(".") === -1) {
-        name = name + ".js";
-    }
-
     const files = fs.readdirSync(path);
-    let breaked = 0; // 结束循环
     files.forEach((filename) => {
-        if (breaked === 1) {
-            return;
-        }
-        // let self = filename.substring(path.length + 1);
-        // if (filename === self) {
-        //     return;
-        // }
         const stat = fs.lstatSync(path + "/" + filename);
         if (stat.isDirectory()) {
             // 命中ignore 则直接跳过
@@ -71,11 +95,11 @@ function loader(obj: Loader) {
             loader({
                 keypath,
                 path: path.replace(bun.globalPath.ROOT_PATH, "") + "/" + filename,
-                name,
                 context,
                 type,
                 ignore,
                 isNecessary,
+                isGetMap
             });
             return;
         }
@@ -89,23 +113,14 @@ function loader(obj: Loader) {
             return;
         }
 
-        const filePrefix = utils.getFilePrefix(filename);
-        // name为*代表匹配目录下所有文件，否则匹配单个文件，如果匹配到具体name则结束文件遍历
-        if (name !== "*.js") {
-            if (filename !== name) {
-                return;
-            } else {
-                key = _getFuncName(path, keypath, filePrefix);
-                initModule(context, key, path + "/" + filePrefix, type);
-                breaked = 1;
-                return;
-            }
-
+        key = getFuncName(path + '/' + filename, keypath, );
+        if(isGetMap) {
+            context[key] = path + "/" + filename;
+        } else {
+            initModule(context, key, path + "/" + filename, type);
         }
-        key = _getFuncName(path, keypath, filePrefix);
-        initModule(context, key, path + "/" + filePrefix, type);
     });
-}
+};
 // 定义模块
 function initModule(context: any, key: string, path: string, type?: string) {
     let mod: any;
@@ -159,8 +174,9 @@ function loadModule(path: string): any {
  * 则拼出来的方法名为：Action_Api_Home
  * @return string
  */
-function _getFuncName(path: string, keypath: string, filePrefix?: any): string {
+export const getFuncName = (path: string, keypath: string): string => {
     let newpath = path.replace(bun.globalPath.ROOT_PATH, "");
+    newpath = newpath.replace('.js', "");
     if (keypath === newpath) {
         newpath = "";
     } else {
@@ -168,9 +184,6 @@ function _getFuncName(path: string, keypath: string, filePrefix?: any): string {
     }
 
     const patharr = newpath.split("/");
-    if (filePrefix) {
-        patharr.push(filePrefix);
-    }
     const arr = [];
     for (const item of patharr) {
         if (!item) {
@@ -182,6 +195,4 @@ function _getFuncName(path: string, keypath: string, filePrefix?: any): string {
         }));
     }
     return arr.join("_");
-}
-
-export = loader;
+};

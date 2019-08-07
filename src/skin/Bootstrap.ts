@@ -1,6 +1,7 @@
 /**
  * 主启动入口
  */
+
 import { Params } from "../interface";
 import Bun = require("./Core");
 
@@ -20,6 +21,7 @@ export = (params: Params) => {
         bun.setBodyParser();
         bun.setViews();
         bun.setLib();
+        bun.setGlobalModule();
         bun.initAllApps();
         bun.setRouter();
         bun.setPlugins();

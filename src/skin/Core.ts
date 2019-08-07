@@ -11,10 +11,11 @@ import {
     globalPath,
     viewExt
 } from "./config";
+import { err, mvcLoaderList } from "./config";
 import emitter = require("./event.js");
 import Exception = require("./Exception.js");
 import initApp = require("./InitApp.js");
-import Loader = require("./Loader.js");
+import {getFuncName, getGlobalModule, loader} from "./Loader.js";
 import Logger = require("./Logger.js");
 import catchError = require("./middleware/bun_catch_error.js");
 import router = require("./middleware/bun_router.js");
@@ -37,6 +38,7 @@ class Bun extends Koa {
     public app: Apps;
     public context: any;
     public globalPath: any;
+    public globalModule: any;
     /**
 	 * 接受参数
 	 * @params name bun
@@ -56,13 +58,13 @@ class Bun extends Koa {
         // 初始化日志
         this.Logger = Logger(this.globalPath.LOG_PATH);
         // 初始化加载器
-        this.Loader = Loader;
+        this.Loader = loader;
         // 初始化路由
         this.Routes = Routes;
         this.events = emitter;
         this.plugins = {};
         this.lib = {};
-
+        this.globalModule = {};
         // 解决后端渲染前端资源时遇到css相关文件报错的问题
         const Module = require("module");
         Module._extensions[".less"] = (module: any, fn: any) => {
@@ -81,6 +83,61 @@ class Bun extends Koa {
     public setException() {
         (global as any).Exception = Exception;
         this.emitter("setException");
+    }
+
+    /**
+	 * 设置全局加载类
+	 */
+    public setGlobalModule() {
+        const files = fs.readdirSync(this.globalPath.ROOT_PATH + "/app");
+        files.forEach((filename) => {
+            const stat = fs.lstatSync(this.globalPath.ROOT_PATH + "/app" + "/" + filename);
+            if (stat.isDirectory()) {
+                let loaderList = [ ...mvcLoaderList ];
+                try {
+                    const appLoaderConf = require(this.globalPath.CONF_PATH + '/' + filename + '/globalLoader');
+                    loaderList = [ ...mvcLoaderList, ...appLoaderConf ];
+                } catch (e) {
+                    bun.Logger.bunwarn('App ' + filename + " globalLoader not found ");
+                }
+                
+                getGlobalModule(filename, loaderList);
+            }
+        });
+        /* tslint:disable */
+	    const Module = require("module");
+	    function stripBOM(content: string) {
+	        if (content.charCodeAt(0) === 0xFEFF) {
+	            content = content.slice(1);
+	        }
+	        return content;
+	    }
+	    Module._extensions['.js'] = function (module: any, filename: string) {
+	        let content = fs.readFileSync(filename, 'utf8');
+	        let regExp = new RegExp(bun.globalPath.ROOT_PATH + '/app/(.*?)/.*');
+	        if (filename.indexOf('/node_modules') === -1
+	            && filename.match(regExp)) {
+	            let appName = RegExp.$1;
+	            if (!bun.globalModule[appName]) {
+	            	module._compile(stripBOM(content), filename);
+	            	return;
+	            }
+	            let currentKey = getFuncName(filename.replace('.js', ''), '/app/' + appName);
+	            let str = '';
+	            for (const [key, value] of Object.entries(bun.globalModule[appName])) {
+	            	// 过滤自身名字 以及 未引用的名字
+	            	if (key === currentKey || content.indexOf(key) === -1) {
+	            		continue;
+	            	}
+	                str += 'const ' + key + ' = require("'+ value + '");\n';
+	            }
+	            content = str + '\n' + content;
+	        }
+	        module._compile(stripBOM(content), filename);
+	    };
+	    /* tslint:enable */
+        
+        this.emitter("setGlobalModule");
     }
 
     /**

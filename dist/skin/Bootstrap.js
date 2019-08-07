@@ -10,6 +10,7 @@ module.exports = (params) => {
         bun.setBodyParser();
         bun.setViews();
         bun.setLib();
+        bun.setGlobalModule();
         bun.initAllApps();
         bun.setRouter();
         bun.setPlugins();

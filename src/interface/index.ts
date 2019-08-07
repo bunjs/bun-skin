@@ -22,11 +22,11 @@ export interface Router {
     [index: string]: string;
 }
 export interface Loader {
-    keypath: string;
+    keypath?: string;
     path: string;
-    name?: string;
     context?: any;
     type?: string;
     ignore?: string[];
     isNecessary?: boolean;
+    isGetMap?: boolean;
 }

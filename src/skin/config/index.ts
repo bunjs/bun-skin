@@ -1,13 +1,14 @@
 import err = require('./err');
 import globalPath = require('./globalPath');
-import loaderList = require('./loaderList');
+import {appLoaderList, mvcLoaderList} from './loaderList';
 
 const viewExt: string = 'html';
 const defaultPort: string | number = 8000;
 
 export {
     globalPath,
-    loaderList,
+    appLoaderList,
+    mvcLoaderList,
     err,
     viewExt,
     defaultPort

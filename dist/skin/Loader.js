@@ -1,14 +1,33 @@
 "use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
 const fs = require("fs");
 const utils = require("./utils");
-function loader(obj) {
-    let { keypath, path, name, context, type, ignore, isNecessary } = obj;
+function getGlobalModuleByPath(appName, loaderItem) {
+    const res = {};
+    const appPath = '/app/' + appName;
+    const keypath = '/app/' + appName;
+    let { path, ignore, isNecessary } = loaderItem;
+    ignore = ignore || [];
+    isNecessary = isNecessary || false;
+    path = appPath + path;
+    exports.loader({ path, keypath, context: res, ignore, isNecessary, isGetMap: true });
+    return res;
+}
+exports.getGlobalModule = (appName, loadList) => {
+    let map = {};
+    loadList.forEach((item) => {
+        map = Object.assign({}, map, getGlobalModuleByPath(appName, item));
+    });
+    bun.globalModule[appName] = map;
+};
+exports.loader = (obj) => {
+    let { keypath, path, context, type, ignore, isNecessary, isGetMap } = obj;
     keypath = keypath || '';
-    name = name || "*";
     context = context || global;
     type = type || "sync";
     ignore = ignore || [];
     isNecessary = isNecessary || false;
+    isGetMap = isGetMap || false;
     path = bun.globalPath.ROOT_PATH + path;
     let key;
     if (!utils.fsExistsSync(path)) {
@@ -19,32 +38,30 @@ function loader(obj) {
     }
     const fstat = fs.lstatSync(path);
     if (fstat.isFile()) {
-        key = _getFuncName(path, keypath);
-        initModule(context, key, path, type);
+        key = exports.getFuncName(path, keypath);
+        if (isGetMap) {
+            context[key] = path;
+        }
+        else {
+            initModule(context, key, path, type);
+        }
         return;
     }
-    if (name.lastIndexOf(".") === -1) {
-        name = name + ".js";
-    }
     const files = fs.readdirSync(path);
-    let breaked = 0;
     files.forEach((filename) => {
-        if (breaked === 1) {
-            return;
-        }
         const stat = fs.lstatSync(path + "/" + filename);
         if (stat.isDirectory()) {
             if (ignore.indexOf(filename + "/") !== -1) {
                 return;
             }
-            loader({
+            exports.loader({
                 keypath,
                 path: path.replace(bun.globalPath.ROOT_PATH, "") + "/" + filename,
-                name,
                 context,
                 type,
                 ignore,
                 isNecessary,
+                isGetMap
             });
             return;
         }
@@ -54,22 +71,15 @@ function loader(obj) {
         if (!utils.isjs(filename)) {
             return;
         }
-        const filePrefix = utils.getFilePrefix(filename);
-        if (name !== "*.js") {
-            if (filename !== name) {
-                return;
-            }
-            else {
-                key = _getFuncName(path, keypath, filePrefix);
-                initModule(context, key, path + "/" + filePrefix, type);
-                breaked = 1;
-                return;
-            }
+        key = exports.getFuncName(path + '/' + filename, keypath);
+        if (isGetMap) {
+            context[key] = path + "/" + filename;
         }
-        key = _getFuncName(path, keypath, filePrefix);
-        initModule(context, key, path + "/" + filePrefix, type);
+        else {
+            initModule(context, key, path + "/" + filename, type);
+        }
     });
-}
+};
 function initModule(context, key, path, type) {
     let mod;
     if (type === "async") {
@@ -109,8 +119,9 @@ function loadModule(path) {
     }
     return mod;
 }
-function _getFuncName(path, keypath, filePrefix) {
+exports.getFuncName = (path, keypath) => {
     let newpath = path.replace(bun.globalPath.ROOT_PATH, "");
+    newpath = newpath.replace('.js', "");
     if (keypath === newpath) {
         newpath = "";
     }
@@ -118,9 +129,6 @@ function _getFuncName(path, keypath, filePrefix) {
         newpath = newpath.replace(keypath + "/", "");
     }
     const patharr = newpath.split("/");
-    if (filePrefix) {
-        patharr.push(filePrefix);
-    }
     const arr = [];
     for (const item of patharr) {
         if (!item) {
@@ -131,6 +139,5 @@ function _getFuncName(path, keypath, filePrefix) {
         }));
     }
     return arr.join("_");
-}
-module.exports = loader;
+};
 //# sourceMappingURL=Loader.js.map
