@@ -48,7 +48,6 @@ module.exports = (appName) => {
             bun.Loader({
                 keypath: loaderConf.match,
                 path: loaderConf.path,
-                name: loaderConf.name || "*",
                 context: app.class.prototype,
                 type: "async",
                 isNecessary: loaderConf.isNecessary,

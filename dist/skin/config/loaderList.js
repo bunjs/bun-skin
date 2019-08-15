@@ -1,11 +1,7 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.appLoaderList = (appName) => {
-    return [{
-            path: '/src/' + appName + '/app/base/index.js',
-            match: '/src/' + appName + '/app',
-            isNecessary: false
-        }];
+    return [];
 };
 exports.mvcLoaderList = [
     {

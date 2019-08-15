@@ -68,7 +68,7 @@ export = (appName: string) => {
     });
 
     /**
-     * 将action层和model层下的类使用loader直接作为公共类属性
+     * 需要特定引入到app类里作为属性的部分模块
      * 匹配规则为路径匹配，例如：
      * action：Action_Show_Home
      * model：Services_Data_ApiData
@@ -79,7 +79,6 @@ export = (appName: string) => {
             bun.Loader({
                 keypath: loaderConf.match,
                 path: loaderConf.path,
-                name: loaderConf.name || "*",
                 context: app.class.prototype,
                 type: "async",
                 isNecessary: loaderConf.isNecessary,
