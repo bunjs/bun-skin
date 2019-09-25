@@ -68,6 +68,49 @@ export = (appName: string) => {
     });
 
     /**
+     * 添加ral方法
+     * 
+     * app
+     */
+    const registerRal = curry((app: any) => {
+        const context = app.class.prototype;
+        const RAL = require('node-ral').RAL;
+        const ralP = require('node-ral').RALPromise;
+        const path = require('path');
+
+        // 初始化RAL，只需在程序入口运行一次
+        RAL.init({
+            // 指定RAL配置目录
+            confDir: path.join(bun.globalPath.CONF_PATH, app.name + '/ral'),
+            logger: {
+                log_path: bun.globalPath.LOG_PATH + '/ral',
+                app: 'bun-ral',
+                // logInstance: function (options) {
+                //     return {
+                //         notice: function (msg) {
+                //             bun.Logger.ralnotice(msg);
+                //         },
+                //         warning: function (msg) {
+                //             bun.Logger.ralwarning(msg);
+                //         },
+                //         trace: function (msg) {
+                //             bun.Logger.raltrace(msg);
+                //         },
+                //         fatal: function (msg) {
+                //             bun.Logger.ralfatal(msg);
+                //         },
+                //         debug: function (msg) {
+                //             bun.Logger.raldebug(msg);
+                //         }
+                //     }
+                // }
+            },
+        });
+        context.ral = ralP;
+        return app;
+    });
+
+    /**
      * 需要特定引入到app类里作为属性的部分模块
      * 匹配规则为路径匹配，例如：
      * action：Action_Show_Home
@@ -117,6 +160,7 @@ export = (appName: string) => {
     const initApp = run(
         runAppController,
         registerGlobalClass,
+        registerRal,
         registerConfFun,
         registerAppAttributes(appLoaderList(appName)),
         initAppClass,

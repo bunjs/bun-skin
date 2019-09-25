@@ -12,6 +12,7 @@ const initApp = require("./InitApp.js");
 const Loader_js_1 = require("./Loader.js");
 const Logger = require("./Logger.js");
 const catchError = require("./middleware/bun_catch_error.js");
+const ral = require("./middleware/bun_ral.js");
 const router = require("./middleware/bun_router.js");
 const views = require("./middleware/bun_view.js");
 const Plugin = require("./Plugin.js");
@@ -148,6 +149,10 @@ class Bun extends Koa {
     }
     setErrHandle() {
         this.use(catchError);
+    }
+    setRal() {
+        this.use(ral);
+        this.emitter("setRal");
     }
     run(port = config_1.defaultPort) {
         this.listen(port);

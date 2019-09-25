@@ -43,6 +43,21 @@ module.exports = (appName) => {
         context.getConf = utils_1.run(getConf, getConfPath(app.name, false));
         return app;
     });
+    const registerRal = utils_1.curry((app) => {
+        const context = app.class.prototype;
+        const RAL = require('node-ral').RAL;
+        const ralP = require('node-ral').RALPromise;
+        const path = require('path');
+        RAL.init({
+            confDir: path.join(bun.globalPath.CONF_PATH, app.name + '/ral'),
+            logger: {
+                log_path: bun.globalPath.LOG_PATH + '/ral',
+                app: 'bun-ral',
+            },
+        });
+        context.ral = ralP;
+        return app;
+    });
     const registerAppAttributes = utils_1.curry((loaderListConf, app) => {
         for (const loaderConf of loaderListConf) {
             bun.Loader({
@@ -72,7 +87,7 @@ module.exports = (appName) => {
         }
         return app;
     });
-    const initApp = utils_1.run(runAppController, registerGlobalClass, registerConfFun, registerAppAttributes(config_1.appLoaderList(appName)), initAppClass);
+    const initApp = utils_1.run(runAppController, registerGlobalClass, registerRal, registerConfFun, registerAppAttributes(config_1.appLoaderList(appName)), initAppClass);
     return initApp(appName);
 };
 //# sourceMappingURL=InitApp.js.map

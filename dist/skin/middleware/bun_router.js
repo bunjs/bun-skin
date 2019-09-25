@@ -8,10 +8,14 @@ module.exports = (routes) => {
         oCb.afterExecute && await oCb.afterExecute.call(oCb, ctx);
     }
     return async (ctx, next) => {
-        const url = ctx.request.path;
+        let url = ctx.request.path;
         if (ctx.method === 'GET') {
+            const apppathar = url.split('/');
+            if (apppathar.length === 2) {
+                url += '/';
+                apppathar.push('/');
+            }
             if (!routes.get[url]) {
-                const apppathar = url.split('/');
                 for (let i = apppathar.length; i > 1; i--) {
                     const apppath = apppathar.slice(0, i).join('/') + '/*';
                     if (routes.get[apppath] && typeof routes.get[apppath] === 'function') {

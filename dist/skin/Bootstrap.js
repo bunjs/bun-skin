@@ -6,6 +6,7 @@ module.exports = (params) => {
         bun.setException();
         bun.setErrHandle();
         bun.setReqLog();
+        bun.setRal();
         bun.setServerStaic();
         bun.setBodyParser();
         bun.setViews();

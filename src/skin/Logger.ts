@@ -27,6 +27,18 @@ export = (LOG_PATH: string) => {
                 pattern: ".yyyy-MM-dd-hh",
                 compress: true,
             },
+            ral: {
+                type: "dateFile",
+                filename: LOG_PATH + "/ral/ral.log",
+                pattern: ".yyyy-MM-dd-hh",
+                compress: true,
+            },
+            ralerr: {
+                type: "dateFile",
+                filename: LOG_PATH + "/ral/ral.log.wf",
+                pattern: ".yyyy-MM-dd-hh",
+                compress: true,
+            },
         },
         categories: {
             default: {
@@ -49,6 +61,14 @@ export = (LOG_PATH: string) => {
                 appenders: ["bunko"],
                 level: "debug",
             },
+            ral: {
+                appenders: ["ral"],
+                level: "debug",
+            },
+            ralerr: {
+                appenders: ["ralerr"],
+                level: "debug",
+            }
         },
     });
     return {
@@ -76,6 +96,21 @@ export = (LOG_PATH: string) => {
         },
         bunwarn(str: string) {
             log4js.getLogger("bunko").warn(str);
+        },
+        ralnotice(str: string) {
+            log4js.getLogger("ral").info(str);
+        },
+        ralwarning(str: string) {
+            log4js.getLogger("ralerr").warn(str);
+        },
+        raltrace(str: string) {
+            log4js.getLogger("ralerr").trace(str);
+        },
+        ralfatal(str: string) {
+            log4js.getLogger("ralerr").fatal(str);
+        },
+        raldebug(str: string) {
+            log4js.getLogger("ral").info(str);
         },
     };
 };

@@ -15,11 +15,10 @@ export = (path: string, opts: any) => {
     path = resolve(path || 'views');
     opts = opts || {};
     const ext = '.' + (opts.ext || 'html');
-    
+    const render = pug.renderFile;
     return function view(ctx: any, next: any) {
         if (ctx.render) { return next(); }
-
-        const render = pug.renderFile;
+        
         // 渲染模板出html
         ctx.renderHtml = (_view: string, locals: any) => {
             const appname = _view.split('/')[0];

@@ -18,6 +18,7 @@ import initApp = require("./InitApp.js");
 import {getFuncName, getGlobalModule, loader} from "./Loader.js";
 import Logger = require("./Logger.js");
 import catchError = require("./middleware/bun_catch_error.js");
+import ral = require("./middleware/bun_ral.js");
 import router = require("./middleware/bun_router.js");
 import views = require("./middleware/bun_view.js");
 import Plugin = require("./Plugin.js");
@@ -240,6 +241,15 @@ class Bun extends Koa {
 	 */
     public setErrHandle() {
         this.use(catchError);
+    }
+
+    /**
+	 * 设置ral中间件
+	 * 统一自动透传cookie
+	 */
+    public setRal() {
+        this.use(ral);
+        this.emitter("setRal");
     }
 
     /**

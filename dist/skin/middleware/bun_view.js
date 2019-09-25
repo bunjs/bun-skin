@@ -6,11 +6,11 @@ module.exports = (path, opts) => {
     path = path_1.resolve(path || 'views');
     opts = opts || {};
     const ext = '.' + (opts.ext || 'html');
+    const render = pug.renderFile;
     return function view(ctx, next) {
         if (ctx.render) {
             return next();
         }
-        const render = pug.renderFile;
         ctx.renderHtml = (_view, locals) => {
             const appname = _view.split('/')[0];
             const manifest = fs.readFileSync(bun.globalPath.ROOT_PATH + '/static/' + appname + '/manifest.json');
