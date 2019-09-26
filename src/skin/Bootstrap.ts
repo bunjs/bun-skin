@@ -3,7 +3,9 @@
  */
 
 import { Params } from "../interface";
-import Bun = require("./Core");
+import Bun = require("./Bun");
+import core = require("./Core");
+import { run } from "./utils";
 
 /**
  * 接受参数
@@ -13,20 +15,21 @@ import Bun = require("./Core");
 export = (params: Params) => {
     try {
         (global as any).bun = new Bun("bun", params);
-        // todo 执行后注销这些方法，以防外部调用
-        bun.setException();
-        bun.setErrHandle();
-        bun.setReqLog();
-        bun.setRal();
-        bun.setServerStaic();
-        bun.setBodyParser();
-        bun.setViews();
-        bun.setLib();
-        bun.setGlobalModule();
-        bun.initAllApps();
-        bun.setRouter();
-        bun.setPlugins();
-        bun.run(params.port);
+        run(
+            core.start(params.port || 8000),
+            core.setPlugins,
+            core.setRouter,
+            core.initAllApps,
+            core.setGlobalModule,
+            core.setLib,
+            core.setViews,
+            core.setBodyParser,
+            core.setServerStaic,
+            core.setRal,
+            core.setReqLog,
+            core.setErrHandle,
+            core.setException,
+        )(bun);
     } catch (e) {
         bun.Logger.bunerr(e);
     }

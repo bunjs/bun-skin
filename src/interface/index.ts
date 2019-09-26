@@ -9,6 +9,7 @@ export interface App {
     router?: any;
     name?: string;
     class?: any;
+    path?: string;
 }
 export interface Plugin {
     enable: string;
@@ -27,6 +28,6 @@ export interface Loader {
     context?: any;
     type?: string;
     ignore?: string[];
-    isNecessary?: boolean;
+    isRequired?: boolean;
     isGetMap?: boolean;
 }

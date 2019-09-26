@@ -1,67 +1,54 @@
 "use strict";
 const fs = require("fs");
-const Koa = require("koa");
 const bodyParser = require("koa-bodyparser");
 const serverStaic = require("koa-static");
-const path = require("path");
 const config_1 = require("./config");
 const config_2 = require("./config");
-const emitter = require("./event.js");
 const Exception = require("./Exception.js");
 const initApp = require("./InitApp.js");
 const Loader_js_1 = require("./Loader.js");
-const Logger = require("./Logger.js");
 const catchError = require("./middleware/bun_catch_error.js");
 const ral = require("./middleware/bun_ral.js");
 const router = require("./middleware/bun_router.js");
 const views = require("./middleware/bun_view.js");
 const Plugin = require("./Plugin.js");
-const Routes = require("./Routes.js");
 const utils_1 = require("./utils");
-class Bun extends Koa {
-    constructor(name, options) {
-        super();
-        this.name = name;
-        this.context.app = this;
-        const rootPath = options.ROOT_PATH || path.dirname(require.main.filename);
-        this.globalPath = {};
-        Object.assign(this.globalPath, config_1.globalPath(rootPath));
-        this.Logger = Logger(this.globalPath.LOG_PATH);
-        this.Loader = Loader_js_1.loader;
-        this.Routes = Routes;
-        this.events = emitter;
-        this.plugins = {};
-        this.lib = {};
-        this.globalModule = {};
-        const Module = require("module");
-        Module._extensions[".less"] = (module, fn) => {
-            return "";
-        };
-        Module._extensions[".css"] = (module, fn) => {
-            return "";
-        };
-        Object.freeze(bun);
-    }
-    setException() {
+const utils_2 = require("./utils");
+module.exports = {
+    setException: utils_2.curry((bun) => {
         global.Exception = Exception;
-        this.emitter("setException");
-    }
-    setGlobalModule() {
-        const files = fs.readdirSync(this.globalPath.ROOT_PATH + "/app");
-        files.forEach((filename) => {
-            const stat = fs.lstatSync(this.globalPath.ROOT_PATH + "/app" + "/" + filename);
-            if (stat.isDirectory()) {
-                let loaderList = [...config_2.mvcLoaderList];
-                try {
-                    const appLoaderConf = require(this.globalPath.CONF_PATH + '/' + filename + '/globalLoader');
-                    loaderList = [...config_2.mvcLoaderList, ...appLoaderConf];
-                }
-                catch (e) {
-                    bun.Logger.bunwarn('App ' + filename + " globalLoader not found ");
-                }
-                Loader_js_1.getGlobalModule(filename, loaderList);
+        bun.emitter("setException");
+        return bun;
+    }),
+    setGlobalModule: utils_2.curry((bun) => {
+        if (bun.isSingle) {
+            let loaderList = [...config_2.mvcLoaderList];
+            try {
+                const appLoaderConf = require(bun.globalPath.CONF_PATH + '/globalLoader');
+                loaderList = [...config_2.mvcLoaderList, ...appLoaderConf];
             }
-        });
+            catch (e) {
+                bun.Logger.bunwarn("App globalLoader not found ");
+            }
+            Loader_js_1.getGlobalModule(loaderList, '');
+        }
+        else {
+            const files = fs.readdirSync(bun.globalPath.ROOT_PATH + "/app");
+            files.forEach((filename) => {
+                const stat = fs.lstatSync(bun.globalPath.ROOT_PATH + "/app" + "/" + filename);
+                if (stat.isDirectory()) {
+                    let loaderList = [...config_2.mvcLoaderList];
+                    try {
+                        const appLoaderConf = require(bun.globalPath.CONF_PATH + '/' + filename + '/globalLoader');
+                        loaderList = [...config_2.mvcLoaderList, ...appLoaderConf];
+                    }
+                    catch (e) {
+                        bun.Logger.bunwarn('App ' + filename + " globalLoader not found ");
+                    }
+                    Loader_js_1.getGlobalModule(loaderList, filename);
+                }
+            });
+        }
         const Module = require("module");
         function stripBOM(content) {
             if (content.charCodeAt(0) === 0xFEFF) {
@@ -71,100 +58,114 @@ class Bun extends Koa {
         }
         Module._extensions['.js'] = function (module, filename) {
             let content = fs.readFileSync(filename, 'utf8');
-            let regExp = new RegExp(bun.globalPath.ROOT_PATH + '/app/(.*?)/.*');
+            let regExp = new RegExp(bun.globalPath.ROOT_PATH + (bun.isSingle ? '/app/.*' : '/app/(.*?)/.*'));
             if (filename.indexOf('/node_modules') === -1
                 && filename.match(regExp)) {
-                let appName = RegExp.$1;
-                if (!bun.globalModule[appName]) {
+                let appName = bun.isSingle ? '' : RegExp.$1;
+                let globalModule = bun.isSingle ? bun.globalModule : bun.globalModule[RegExp.$1];
+                if (!globalModule) {
                     module._compile(stripBOM(content), filename);
                     return;
                 }
-                let currentKey = Loader_js_1.getFuncName(filename.replace('.js', ''), '/app/' + appName);
+                let currentKey = Loader_js_1.getFuncName(filename.replace('.js', ''), bun.isSingle ? '/app' : '/app/' + appName);
                 let str = '';
-                for (const [key, value] of Object.entries(bun.globalModule[appName])) {
+                Object.entries(globalModule).forEach(([key, value]) => {
                     if (key === currentKey || content.indexOf(key) === -1) {
-                        continue;
+                        return;
                     }
                     str += 'const ' + key + ' = require("' + value + '");\n';
-                }
+                });
                 content = str + '\n' + content;
             }
             module._compile(stripBOM(content), filename);
         };
-        this.emitter("setGlobalModule");
-    }
-    initAllApps() {
-        let routes = {};
-        this.app = {};
-        const files = fs.readdirSync(this.globalPath.ROOT_PATH + "/app");
-        files.forEach((filename) => {
-            const stat = fs.lstatSync(this.globalPath.ROOT_PATH + "/app" + "/" + filename);
-            if (stat.isDirectory()) {
-                routes = new this.Routes(filename);
-                this.app[filename] = initApp(filename);
-            }
-        });
-        this.emitter("initApp", this.app);
-    }
-    setLib() {
-        this.Loader({
+        bun.emitter("setGlobalModule");
+        return bun;
+    }),
+    initAllApps: utils_2.curry((bun) => {
+        bun.app = {};
+        if (bun.isSingle) {
+            bun.app = initApp('');
+        }
+        else {
+            const files = fs.readdirSync(bun.globalPath.ROOT_PATH + "/app");
+            files.forEach((filename) => {
+                const stat = fs.lstatSync(bun.globalPath.ROOT_PATH + "/app" + "/" + filename);
+                if (stat.isDirectory()) {
+                    bun.app[filename] = initApp(filename);
+                }
+            });
+        }
+        bun.emitter("initApp", bun.app);
+        return bun;
+    }),
+    setLib: utils_2.curry((bun) => {
+        bun.Loader({
             keypath: "lib",
             path: "/lib",
-            context: this.lib
+            context: bun.lib
         });
-        this.emitter("setLib", this.lib);
-    }
-    setPlugins() {
+        bun.emitter("setLib", bun.lib);
+        return bun;
+    }),
+    setPlugins: utils_2.curry((bun) => {
         Plugin();
-        this.emitter("setPlugins", this.plugins);
-    }
-    setRouter() {
-        const routes = new this.Routes();
-        for (const [key, value] of Object.entries(this.app)) {
-            routes.mergeAppRoutes(value.router.routesHandle);
+        bun.emitter("setPlugins", bun.plugins);
+        return bun;
+    }),
+    setRouter: utils_2.curry((bun) => {
+        const routes = new bun.Routes();
+        if (bun.isSingle) {
+            routes.mergeAppRoutes(bun.app.router.routesHandle);
         }
-        this.use(router(routes.routesHandle));
-        this.emitter("setRouter");
-    }
-    setReqLog() {
-        this.use(this.Logger.log4js.koaLogger(this.Logger.reqLog(), {
+        else {
+            Object.entries(bun.app).forEach(([key, value]) => {
+                routes.mergeAppRoutes(value.router.routesHandle);
+            });
+        }
+        bun.use(router(routes.routesHandle));
+        bun.emitter("setRouter");
+        return bun;
+    }),
+    setReqLog: utils_2.curry((bun) => {
+        bun.use(bun.Logger.log4js.koaLogger(bun.Logger.reqLog(), {
             format: "[:remote-addr :method :url :status :response-timems][:referrer HTTP/:http-version :user-agent]",
             level: "auto",
         }));
-        this.emitter("setReqLog");
-    }
-    setServerStaic() {
-        this.use(serverStaic(this.globalPath.STATIC_PATH));
-        this.emitter("setServerStaic");
-    }
-    setBodyParser() {
-        this.use(bodyParser());
-        this.emitter("setBodyParser");
-    }
-    setViews() {
-        this.use(views(this.globalPath.TPL_PATH, {
+        bun.emitter("setReqLog");
+        return bun;
+    }),
+    setServerStaic: utils_2.curry((bun) => {
+        bun.use(serverStaic(bun.globalPath.STATIC_PATH));
+        bun.emitter("setServerStaic");
+        return bun;
+    }),
+    setBodyParser: utils_2.curry((bun) => {
+        bun.use(bodyParser());
+        bun.emitter("setBodyParser");
+        return bun;
+    }),
+    setViews: utils_2.curry((bun) => {
+        bun.use(views(bun.globalPath.TPL_PATH, {
             ext: config_1.viewExt,
         }));
-        this.emitter("setViews");
-    }
-    setErrHandle() {
-        this.use(catchError);
-    }
-    setRal() {
-        this.use(ral);
-        this.emitter("setRal");
-    }
-    run(port = config_1.defaultPort) {
-        this.listen(port);
+        bun.emitter("setViews");
+        return bun;
+    }),
+    setErrHandle: utils_2.curry((bun) => {
+        bun.use(catchError);
+        return bun;
+    }),
+    setRal: utils_2.curry((bun) => {
+        bun.use(ral);
+        bun.emitter("setRal");
+        return bun;
+    }),
+    start: utils_2.curry((port, bun) => {
+        bun.listen(port);
         utils_1.deepFreeze(bun, "context");
         console.log("start on" + port);
-    }
-    emitter(eventName, freeze) {
-        if (freeze) {
-            utils_1.deepFreeze(freeze);
-        }
-        emitter.emit(eventName, this);
-    }
-}
-module.exports = Bun;
+        return bun;
+    })
+};
 //# sourceMappingURL=Core.js.map

@@ -14,16 +14,16 @@ import utils = require("./utils");
  * @param {string} appName 应用名
  * @param {object} loaderItem 要加载的全局模块的路径
  */
-function getGlobalModuleByPath(appName: string, loaderItem: Loader) {
+function getGlobalModuleByPath(loaderItem: Loader, appName?: string) {
     const res: any = {};
-    const appPath = '/app/' + appName;
-    const keypath = '/app/' + appName;
-    let { path, ignore, isNecessary } = loaderItem;
+    const appPath = bun.isSingle ? '/app' : '/app/' + appName;
+    const keypath = appPath;
+    let { path, ignore, isRequired } = loaderItem;
     ignore = ignore || [];
-    isNecessary = isNecessary || false;
+    isRequired = isRequired || false;
     path = appPath + path;
 
-    loader({ path, keypath, context: res, ignore, isNecessary, isGetMap: true });
+    loader({ path, keypath, context: res, ignore, isRequired, isGetMap: true });
     return res;
 }
 
@@ -33,12 +33,16 @@ function getGlobalModuleByPath(appName: string, loaderItem: Loader) {
  * @param {string} appName 应用名
  * @param {array} loadList 要加载的全局模块配置
  */
-export const getGlobalModule = (appName: string, loadList: any) => {
+export const getGlobalModule = (loadList: any, appName?: string) => {
     let map: any = {};
     loadList.forEach((item: Loader) => {
-        map = {...map, ...getGlobalModuleByPath(appName, item)};
+        map = {...map, ...getGlobalModuleByPath(item, appName || '')};
     });
-    bun.globalModule[appName] = map;
+    if(appName) {
+        bun.globalModule[appName] = map;
+    } else {
+        bun.globalModule = map;
+    }
 };
 
 /**
@@ -49,23 +53,23 @@ export const getGlobalModule = (appName: string, loadList: any) => {
  * @param {string} context 声明上下文
  * @param {string} type 异步加载or同步加载
  * @param {array}  ignore 需要忽略的目录
- * @param {boolean} isNecessary 是否必要
+ * @param {boolean} isRequired 是否必要
  * @param {boolean} isGetMap 是否只设置路径映射
  */
 export const loader = (obj: Loader) => {
-    let { keypath, path, context, type, ignore, isNecessary, isGetMap } = obj;
+    let { keypath, path, context, type, ignore, isRequired, isGetMap } = obj;
     keypath = keypath || '';
     context = context || global;
     type = type || "sync";
     ignore = ignore || [];
-    isNecessary = isNecessary || false;
+    isRequired = isRequired || false;
     isGetMap = isGetMap || false;
     path = bun.globalPath.ROOT_PATH + path;
 
     let key: string;
     if (!utils.fsExistsSync(path)) {
         // 如果必要且找不到对应目录，则报警
-        if (isNecessary) {
+        if (isRequired) {
             bun.Logger.bunwarn("bun-loader: Loader not found " + path);
         }
         return;
@@ -98,7 +102,7 @@ export const loader = (obj: Loader) => {
                 context,
                 type,
                 ignore,
-                isNecessary,
+                isRequired,
                 isGetMap
             });
             return;

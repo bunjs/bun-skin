@@ -21,8 +21,14 @@ export = (path: string, opts: any) => {
         
         // 渲染模板出html
         ctx.renderHtml = (_view: string, locals: any) => {
-            const appname = _view.split('/')[0];
-            const manifest = fs.readFileSync(bun.globalPath.ROOT_PATH + '/static/'+ appname +'/manifest.json');
+            let appPath: string;
+            if (bun.isSingle) {
+                appPath = '';
+            } else {
+                const appname = _view.split('/')[0];
+                appPath = '/' + appname;
+            }
+            const manifest = fs.readFileSync(bun.globalPath.ROOT_PATH + '/static'+ appPath +'/manifest.json');
             const state = Object.assign({}, ctx.state, locals, {staticSources: JSON.parse(manifest.toString())});
 
             return new Promise((res, rej) => {
@@ -34,8 +40,14 @@ export = (path: string, opts: any) => {
         };
         // 渲染模板并渲染到页面
         ctx.render = (_view: string, locals: any) => {
-            const appname = _view.split('/')[0];
-            const manifest = fs.readFileSync(bun.globalPath.ROOT_PATH + '/static/'+ appname +'/manifest.json');
+            let appPath: string;
+            if (bun.isSingle) {
+                appPath = '';
+            } else {
+                const appname = _view.split('/')[0];
+                appPath = '/' + appname;
+            }
+            const manifest = fs.readFileSync(bun.globalPath.ROOT_PATH + '/static'+ appPath +'/manifest.json');
             const state = Object.assign({}, ctx.state, locals, {staticSources: JSON.parse(manifest.toString())});
 
             return new Promise((res, rej) => {

@@ -8,32 +8,36 @@ class Routes {
         };
     }
     get(obj) {
-        for (const [key, value] of Object.entries(obj)) {
-            this.routesHandle.get["/" + this.appName + key] = this.initCallback(value);
-        }
+        Object.entries(obj).forEach(([key, value]) => {
+            const path = bun.isSingle ? key : ("/" + this.appName + key);
+            this.routesHandle.get[path] = this.initCallback(value);
+        });
     }
     post(obj) {
-        for (const [key, value] of Object.entries(obj)) {
-            this.routesHandle.post["/" + this.appName + key] = this.initCallback(value);
-        }
+        Object.entries(obj).forEach(([key, value]) => {
+            const path = bun.isSingle ? key : ("/" + this.appName + key);
+            this.routesHandle.post[path] = this.initCallback(value);
+        });
     }
     mergeAppRoutes(appRoutesHandle) {
         const self = this;
-        for (const [method, value] of Object.entries(this.routesHandle)) {
+        Object.entries(this.routesHandle).forEach(([method, value]) => {
             this.routesHandle[method] = Object.assign({}, value, appRoutesHandle[method]);
-        }
+        });
     }
     initCallback(path) {
         const self = this;
         return async (ctx) => {
-            const Cb = require(bun.globalPath.APP_PATH + "/" + self.appName + path);
+            const CbPath = bun.isSingle ? path : ("/" + self.appName + path);
+            const tplPath = bun.isSingle ? '' : self.appName + "/";
+            const Cb = require(bun.globalPath.APP_PATH + CbPath);
             const render = ctx.render;
             ctx.render = async (_path, params) => {
-                await render(self.appName + "/" + _path, params);
+                await render(tplPath + _path, params);
             };
             const renderHtml = ctx.renderHtml;
             ctx.renderHtml = async (_path, params) => {
-                return await renderHtml(self.appName + "/" + _path, params);
+                return await renderHtml(tplPath + _path, params);
             };
             const oCb = new Cb();
             oCb.beforeExecute && await oCb.beforeExecute.call(oCb, ctx);

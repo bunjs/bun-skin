@@ -1,18 +1,15 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.appLoaderList = (appName) => {
-    return [];
-};
 exports.mvcLoaderList = [
     {
         path: '/action',
-        isNecessary: true
+        isRequired: true
     }, {
         path: '/controller',
-        isNecessary: true
+        isRequired: true
     }, {
         path: '/model',
-        isNecessary: true
+        isRequired: true
     }
 ];
 //# sourceMappingURL=loaderList.js.map

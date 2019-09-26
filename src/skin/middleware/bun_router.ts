@@ -10,8 +10,11 @@ export = (routes: any) => {
     return async (ctx: any, next: any): Promise<any> => {
         let url = ctx.request.path;
         if (ctx.method === 'GET') {
+            if(url === '') {
+                url = '/';
+            }
             const apppathar = url.split('/');
-            if(apppathar.length === 2) {
+            if(url !== '/' && apppathar.length === 2) {
                 // 针对/app 这种情况做兼容，变成/app/
                 url += '/';
                 apppathar.push('/');

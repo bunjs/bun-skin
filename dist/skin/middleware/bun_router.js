@@ -10,8 +10,11 @@ module.exports = (routes) => {
     return async (ctx, next) => {
         let url = ctx.request.path;
         if (ctx.method === 'GET') {
+            if (url === '') {
+                url = '/';
+            }
             const apppathar = url.split('/');
-            if (apppathar.length === 2) {
+            if (url !== '/' && apppathar.length === 2) {
                 url += '/';
                 apppathar.push('/');
             }

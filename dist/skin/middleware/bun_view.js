@@ -12,8 +12,15 @@ module.exports = (path, opts) => {
             return next();
         }
         ctx.renderHtml = (_view, locals) => {
-            const appname = _view.split('/')[0];
-            const manifest = fs.readFileSync(bun.globalPath.ROOT_PATH + '/static/' + appname + '/manifest.json');
+            let appPath;
+            if (bun.isSingle) {
+                appPath = '';
+            }
+            else {
+                const appname = _view.split('/')[0];
+                appPath = '/' + appname;
+            }
+            const manifest = fs.readFileSync(bun.globalPath.ROOT_PATH + '/static' + appPath + '/manifest.json');
             const state = Object.assign({}, ctx.state, locals, { staticSources: JSON.parse(manifest.toString()) });
             return new Promise((res, rej) => {
                 render(path + '/' + _view + ext, state, (err, html) => {
@@ -25,8 +32,15 @@ module.exports = (path, opts) => {
             });
         };
         ctx.render = (_view, locals) => {
-            const appname = _view.split('/')[0];
-            const manifest = fs.readFileSync(bun.globalPath.ROOT_PATH + '/static/' + appname + '/manifest.json');
+            let appPath;
+            if (bun.isSingle) {
+                appPath = '';
+            }
+            else {
+                const appname = _view.split('/')[0];
+                appPath = '/' + appname;
+            }
+            const manifest = fs.readFileSync(bun.globalPath.ROOT_PATH + '/static' + appPath + '/manifest.json');
             const state = Object.assign({}, ctx.state, locals, { staticSources: JSON.parse(manifest.toString()) });
             return new Promise((res, rej) => {
                 render(path + '/' + _view + ext, state, (err, html) => {

@@ -1,21 +1,11 @@
 "use strict";
-const Bun = require("./Core");
+const Bun = require("./Bun");
+const core = require("./Core");
+const utils_1 = require("./utils");
 module.exports = (params) => {
     try {
         global.bun = new Bun("bun", params);
-        bun.setException();
-        bun.setErrHandle();
-        bun.setReqLog();
-        bun.setRal();
-        bun.setServerStaic();
-        bun.setBodyParser();
-        bun.setViews();
-        bun.setLib();
-        bun.setGlobalModule();
-        bun.initAllApps();
-        bun.setRouter();
-        bun.setPlugins();
-        bun.run(params.port);
+        utils_1.run(core.start(params.port || 8000), core.setPlugins, core.setRouter, core.initAllApps, core.setGlobalModule, core.setLib, core.setViews, core.setBodyParser, core.setServerStaic, core.setRal, core.setReqLog, core.setErrHandle, core.setException)(bun);
     }
     catch (e) {
         bun.Logger.bunerr(e);

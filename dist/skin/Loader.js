@@ -2,36 +2,41 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 const fs = require("fs");
 const utils = require("./utils");
-function getGlobalModuleByPath(appName, loaderItem) {
+function getGlobalModuleByPath(loaderItem, appName) {
     const res = {};
-    const appPath = '/app/' + appName;
-    const keypath = '/app/' + appName;
-    let { path, ignore, isNecessary } = loaderItem;
+    const appPath = bun.isSingle ? '/app' : '/app/' + appName;
+    const keypath = appPath;
+    let { path, ignore, isRequired } = loaderItem;
     ignore = ignore || [];
-    isNecessary = isNecessary || false;
+    isRequired = isRequired || false;
     path = appPath + path;
-    exports.loader({ path, keypath, context: res, ignore, isNecessary, isGetMap: true });
+    exports.loader({ path, keypath, context: res, ignore, isRequired, isGetMap: true });
     return res;
 }
-exports.getGlobalModule = (appName, loadList) => {
+exports.getGlobalModule = (loadList, appName) => {
     let map = {};
     loadList.forEach((item) => {
-        map = Object.assign({}, map, getGlobalModuleByPath(appName, item));
+        map = Object.assign({}, map, getGlobalModuleByPath(item, appName || ''));
     });
-    bun.globalModule[appName] = map;
+    if (appName) {
+        bun.globalModule[appName] = map;
+    }
+    else {
+        bun.globalModule = map;
+    }
 };
 exports.loader = (obj) => {
-    let { keypath, path, context, type, ignore, isNecessary, isGetMap } = obj;
+    let { keypath, path, context, type, ignore, isRequired, isGetMap } = obj;
     keypath = keypath || '';
     context = context || global;
     type = type || "sync";
     ignore = ignore || [];
-    isNecessary = isNecessary || false;
+    isRequired = isRequired || false;
     isGetMap = isGetMap || false;
     path = bun.globalPath.ROOT_PATH + path;
     let key;
     if (!utils.fsExistsSync(path)) {
-        if (isNecessary) {
+        if (isRequired) {
             bun.Logger.bunwarn("bun-loader: Loader not found " + path);
         }
         return;
@@ -60,7 +65,7 @@ exports.loader = (obj) => {
                 context,
                 type,
                 ignore,
-                isNecessary,
+                isRequired,
                 isGetMap
             });
             return;
