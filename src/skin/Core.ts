@@ -4,24 +4,27 @@ import bodyParser = require("koa-bodyparser");
 import serverStaic = require("koa-static");
 import path = require("path");
 import {
-    App,
-    Apps
-} from "../interface";
-import Bun = require("./Bun");
+    IBun
+} from "../types/Bun";
+import {
+    IApp,
+    IApps
+} from "../types/interface";
+import {
+    IRoutes
+} from "../types/Routes";
 import {
     defaultPort,
     viewExt
 } from "./config";
 import { err, mvcLoaderList } from "./config";
-import emitter = require("./event.js");
-import Exception = require("./Exception.js");
-import initApp = require("./InitApp.js");
-import {getFuncName, getGlobalModule} from "./Loader.js";
-import catchError = require("./middleware/bun_catch_error.js");
-import ral = require("./middleware/bun_ral.js");
-import router = require("./middleware/bun_router.js");
-import views = require("./middleware/bun_view.js");
-import Plugin = require("./Plugin.js");
+import emitter = require("./event");
+import initApp = require("./InitApp");
+import catchError = require("./middleware/bun_catch_error");
+import ral = require("./middleware/bun_ral");
+import routerMiddleware = require("./middleware/bun_router");
+import views = require("./middleware/bun_view");
+import Plugin = require("./Plugin");
 import {
     deepFreeze
 } from "./utils";
@@ -29,18 +32,28 @@ import { curry } from "./utils";
 
 export = {
     /**
-	 * 设置Exception异常类
+	 * 设置Context
 	 */
-    setException: curry((bun: Bun) => {
-        (global as any).Exception = Exception;
-        bun.emitter("setException");
+    setContext: curry((bun: IBun) => {
+        bun.use((ctx: any, next: any) => {
+            ctx.bun = {
+                Loader: bun.Loader,
+                Logger: bun.Logger,
+                globalPath: bun.globalPath,
+                isSingle: bun.isSingle,
+                app: bun.app,
+                Exception: bun.Exception
+            };
+            return next();
+        });
+        bun.emitter("setContext");
         return bun;
     }),
 
     /**
 	 * 设置全局加载类
 	 */
-    setGlobalModule: curry((bun: Bun) => {
+    setGlobalModule: curry((bun: IBun) => {
         if(bun.isSingle) {
             let loaderList = [ ...mvcLoaderList ];
             try {
@@ -49,7 +62,7 @@ export = {
             } catch (e) {
                 bun.Logger.bunwarn("App globalLoader not found ");
             }
-            getGlobalModule(loaderList, '');
+            bun.globalModule = bun.Loader.getGlobalModule(loaderList, '');
         } else {
             const files = fs.readdirSync(bun.globalPath.ROOT_PATH + "/app");
             files.forEach((filename) => {
@@ -63,11 +76,11 @@ export = {
                         bun.Logger.bunwarn('App ' + filename + " globalLoader not found ");
                     }
                     
-                    getGlobalModule(loaderList, filename);
+                    bun.globalModule[filename] = bun.Loader.getGlobalModule(loaderList, filename);
                 }
             });
         }
-        
+
 	    /* tslint:disable */
 	    const Module = require("module");
 	    function stripBOM(content: string) {
@@ -87,7 +100,7 @@ export = {
 	            	module._compile(stripBOM(content), filename);
 	            	return;
 	            }
-	            let currentKey = getFuncName(filename.replace('.js', ''), bun.isSingle ? '/app' : '/app/' + appName);
+	            let currentKey = bun.Loader.getFuncName(filename.replace('.js', ''), bun.isSingle ? '/app' : '/app/' + appName);
 	            let str = '';
 	            Object.entries(globalModule).forEach(([key, value]) => {
 	            	// 过滤自身名字 以及 未引用的名字
@@ -96,12 +109,14 @@ export = {
 	            	}
 	                str += 'const ' + key + ' = require("'+ value + '");\n';
 	            });
+	            if(content.indexOf('extends App')) {
+	            	 str += 'const App = bun.app'+ (appName ? '.' + appName : '') + '.class;\n';
+	            }
 	            content = str + '\n' + content;
 	        }
 	        module._compile(stripBOM(content), filename);
 	    };
 	    /* tslint:enable */
-        
         bun.emitter("setGlobalModule");
         return bun;
     }),
@@ -110,11 +125,11 @@ export = {
 	 * 初始化目录下所有app
 	 * app包含属性：routes, class
 	 */
-    initAllApps: curry((bun: Bun) => {
+    initAllApps: curry((bun: IBun) => {
         // let routes = {};
-        bun.app = {};
         if(bun.isSingle) {
-            (bun.app as App) = initApp('');
+            // (bun.app as IApp) = initApp(bun, '');
+            initApp(bun, '');
         } else {
             const files = fs.readdirSync(bun.globalPath.ROOT_PATH + "/app");
             files.forEach((filename: string) => {
@@ -124,7 +139,8 @@ export = {
                     // new一个新路由实例，以app名作为key存放在对象
                     // routes = new bun.Routes(filename);
                     // 将每个app相关属性存入全局备用
-                    (bun.app as Apps)[filename] = initApp(filename);
+                    // (bun.app as IApps)[filename] = initApp(bun, filename);
+                    initApp(bun, filename);
                 }
             });
         }
@@ -137,8 +153,8 @@ export = {
 	 * 设置lib全局变量
 	 * 将lib里的公共类设置到全局，方便引用
 	 */
-    setLib: curry((bun: Bun) => {
-        bun.Loader({
+    setLib: curry((bun: IBun) => {
+        bun.Loader.loader({
             keypath: "lib",
             path: "/lib",
             context: bun.lib
@@ -151,8 +167,8 @@ export = {
 	 * 设置插件
 	 * 初始化所有插件，并注册到bun
 	 */
-    setPlugins: curry((bun: Bun) => {
-        Plugin();
+    setPlugins: curry((bun: IBun) => {
+        Plugin(bun);
         bun.emitter("setPlugins", bun.plugins);
         return bun;
     }),
@@ -161,7 +177,7 @@ export = {
 	 * 设置app路由中间件（appname做根路由）
 	 * 将router中间件注册进koa
 	 */
-    setRouter: curry((bun: Bun) => {
+    setRouter: curry((bun: IBun) => {
         const routes = new bun.Routes();
         if(bun.isSingle) {
             routes.mergeAppRoutes(bun.app.router.routesHandle);
@@ -171,7 +187,7 @@ export = {
             });
         }
         
-        bun.use(router(routes.routesHandle));
+        bun.use(routerMiddleware(routes.routesHandle));
         bun.emitter("setRouter");
         return bun;
     }),
@@ -179,7 +195,7 @@ export = {
     /**
 	 * 设置请求日志中间件
 	 */
-    setReqLog: curry((bun: Bun) => {
+    setReqLog: curry((bun: IBun) => {
         // 捕捉全部请求到日志
         bun.use(bun.Logger.log4js.koaLogger(bun.Logger.reqLog(), {
             format: "[:remote-addr :method :url :status :response-timems][:referrer HTTP/:http-version :user-agent]",
@@ -192,7 +208,7 @@ export = {
     /**
 	 * 设置静态服务中间件
 	 */
-    setServerStaic: curry((bun: Bun) => {
+    setServerStaic: curry((bun: IBun) => {
         bun.use(serverStaic(bun.globalPath.STATIC_PATH));
         bun.emitter("setServerStaic");
         return bun;
@@ -201,7 +217,7 @@ export = {
     /**
 	 * 设置请求解析中间件
 	 */
-    setBodyParser: curry((bun: Bun) => {
+    setBodyParser: curry((bun: IBun) => {
         bun.use(bodyParser());
         bun.emitter("setBodyParser");
         return bun;
@@ -210,7 +226,7 @@ export = {
     /**
 	 * 设置渲染视图中间件
 	 */
-    setViews: curry((bun: Bun) => {
+    setViews: curry((bun: IBun) => {
         bun.use(views(bun.globalPath.TPL_PATH, {
             ext: viewExt,
         }));
@@ -222,7 +238,7 @@ export = {
 	 * 捕获所有业务错误
 	 * 错误会统一打到日志app-worker.log.wf
 	 */
-    setErrHandle: curry((bun: Bun) => {
+    setErrHandle: curry((bun: IBun) => {
         bun.use(catchError);
         return bun;
     }),
@@ -231,7 +247,7 @@ export = {
 	 * 设置ral中间件
 	 * 统一自动透传cookie
 	 */
-    setRal: curry((bun: Bun) => {
+    setRal: curry((bun: IBun) => {
         bun.use(ral);
         bun.emitter("setRal");
         return bun;
@@ -260,10 +276,10 @@ export = {
     /**
 	 * 启动服务
 	 */
-    start: curry((port: string | number, bun: Bun) => {
+    start: curry((port: string | number, bun: IBun) => {
         bun.listen(port);
         // 冻结bun对象，只读，防止用户错误覆盖
-        deepFreeze(bun, "context");
+        // deepFreeze(bun, "context");
         console.log("start on" + port);
         return bun;
     })

@@ -1,9 +1,10 @@
 "use strict";
 const config_1 = require("./config");
 const utils_1 = require("./utils");
-const initAppClass = utils_1.curry((name) => {
+const initAppClass = utils_1.curry((bun, name) => {
     const classExtends = bun.lib.Common_Action;
-    const routes = new bun.Routes(name);
+    const Routes = bun.Routes;
+    const routes = new Routes(name);
     class App extends classExtends {
         constructor() {
             super();
@@ -18,7 +19,7 @@ const initAppClass = utils_1.curry((name) => {
         router: routes,
     };
 });
-const registerConfFun = utils_1.curry((app) => {
+const registerConfFun = utils_1.curry((bun, app) => {
     const context = app.class.prototype;
     const getConfPath = utils_1.curry((name, appendApp, filename) => {
         let path = bun.globalPath.CONF_PATH + app.path +
@@ -30,7 +31,7 @@ const registerConfFun = utils_1.curry((app) => {
         else {
             const filePostfix = filename.substr(pos + 1);
             if (filePostfix !== "js") {
-                throw new Exception(Object.assign({}, config_1.err.ERROR_APP_CONNOT_LOAD_NOJS_FILE, { msg: "connot load ." + filePostfix + " please instead of .js" }));
+                throw new bun.Exception(Object.assign({}, config_1.err.ERROR_APP_CONNOT_LOAD_NOJS_FILE, { msg: "connot load ." + filePostfix + " please instead of .js" }));
             }
         }
         return path;
@@ -43,7 +44,7 @@ const registerConfFun = utils_1.curry((app) => {
     context.getConf = utils_1.run(getConf, getConfPath(app.name, false));
     return app;
 });
-const registerRal = utils_1.curry((app) => {
+const registerRal = utils_1.curry((bun, app) => {
     const context = app.class.prototype;
     const RAL = require('node-ral').RAL;
     const ralP = require('node-ral').RALPromise;
@@ -58,10 +59,10 @@ const registerRal = utils_1.curry((app) => {
     context.ral = ralP;
     return app;
 });
-const registerAppAttributes = utils_1.curry((loaderListConf, app) => {
+const registerAppAttributes = utils_1.curry((bun, loaderListConf, app) => {
     const appLoaderConf = require(bun.globalPath.CONF_PATH + app.path + '/globalLoader');
     [...appLoaderConf, ...loaderListConf].map((loaderConf) => {
-        bun.Loader({
+        bun.Loader.loader({
             keypath: '/app' + app.path,
             path: '/app' + app.path + loaderConf.path,
             context: app.class.prototype,
@@ -71,29 +72,22 @@ const registerAppAttributes = utils_1.curry((loaderListConf, app) => {
     });
     return app;
 });
-const runAppController = utils_1.curry((app) => {
+const setBun = utils_1.curry((bun, app) => {
+    if (!app.name) {
+        bun.app = app;
+    }
+    else {
+        bun.app[app.name] = app;
+    }
+    return app;
+});
+const runAppController = utils_1.curry((bun, app) => {
     const Controller_Main = require(bun.globalPath.APP_PATH + app.path + "/controller/Main.js");
     const main = new Controller_Main();
     main.execute();
     return app;
 });
-const registerGlobalClass = utils_1.curry((app) => {
-    if (bun.isSingle) {
-        bun.class = app.class;
-    }
-    else {
-        if (!bun.class) {
-            bun.class = {
-                [app.name]: app.class,
-            };
-        }
-        else {
-            bun.class[app.name] = app.class;
-        }
-    }
-    return app;
-});
-module.exports = (appName) => {
-    return utils_1.run(runAppController, registerGlobalClass, registerConfFun, registerAppAttributes(config_1.mvcLoaderList), initAppClass)(appName);
+module.exports = (bun, appName) => {
+    return utils_1.run(runAppController(bun), setBun(bun), registerConfFun(bun), registerAppAttributes(bun, config_1.mvcLoaderList), initAppClass(bun))(appName);
 };
 //# sourceMappingURL=InitApp.js.map

@@ -1,4 +1,11 @@
 import fs = require("fs");
+import {
+    IBun
+} from "../types/Bun";
+import { IApp, IApps } from "../types/interface";
+import {
+    IRoutes
+} from "../types/Routes";
 import { err, mvcLoaderList } from "./config";
 import { curry, run } from "./utils";
 // import injectTapEventPlugin from 'react-tap-event-plugin';
@@ -10,10 +17,11 @@ import { curry, run } from "./utils";
  * @params appName app名称
  * @params route 路由
  */
-const initAppClass = curry((name: string) => {
+const initAppClass = curry((bun: IBun, name: string): IApp => {
     // 默认App继承Common_Action
     const classExtends = bun.lib.Common_Action;
-    const routes = new bun.Routes(name);
+    const Routes = bun.Routes;
+    const routes = new Routes(name);
     abstract class App extends classExtends {
         public Routes: any;
         public appName?: string;
@@ -38,7 +46,7 @@ const initAppClass = curry((name: string) => {
  *
  * app
  */
-const registerConfFun = curry((app: any) => {
+const registerConfFun = curry((bun: IBun, app: IApp): IApp => {
     const context = app.class.prototype;
     const getConfPath = curry((name: string, appendApp: boolean, filename: string) => {
         let path = bun.globalPath.CONF_PATH + app.path +
@@ -49,7 +57,7 @@ const registerConfFun = curry((app: any) => {
         } else {
             const filePostfix = filename.substr(pos + 1);
             if (filePostfix !== "js") {
-                throw new Exception({
+                throw new bun.Exception({
                     ...err.ERROR_APP_CONNOT_LOAD_NOJS_FILE,
                     ...{ msg: "connot load ." + filePostfix + " please instead of .js"},
                 });
@@ -71,7 +79,7 @@ const registerConfFun = curry((app: any) => {
  * 
  * app
  */
-const registerRal = curry((app: any) => {
+const registerRal = curry((bun: IBun, app: IApp): IApp => {
     const context = app.class.prototype;
     const RAL = require('node-ral').RAL;
     const ralP = require('node-ral').RALPromise;
@@ -116,10 +124,10 @@ const registerRal = curry((app: any) => {
  * model：Services_Data_ApiData
  *
  */
-const registerAppAttributes = curry((loaderListConf: any, app: any) => {
+const registerAppAttributes = curry((bun: IBun, loaderListConf: any, app: IApp): IApp => {
     const appLoaderConf = require(bun.globalPath.CONF_PATH + app.path + '/globalLoader');
     [...appLoaderConf, ...loaderListConf].map((loaderConf) => {
-        bun.Loader({
+        bun.Loader.loader({
             keypath: '/app' + app.path,
             path: '/app' + app.path + loaderConf.path,
             context: app.class.prototype,
@@ -131,42 +139,43 @@ const registerAppAttributes = curry((loaderListConf: any, app: any) => {
 });
 
 /**
+ * 赋值给实例bun
+ *
+ * @private
+ * @params bun: IBun, app: IApp
+ */
+const setBun = curry((bun: IBun, app: IApp): IApp => {
+    if(!app.name) {
+        // name为空则走single逻辑
+        (bun.app as IApp) = app;
+    } else {
+        (bun.app as IApps)[app.name] = app;
+    }
+    return app;
+});
+
+/**
  * 执行每个app的controller
  *
  * @private
  * @params appName app名称
  */
-const runAppController = curry((app: any) => {
+const runAppController = curry((bun: IBun, app: IApp): IApp => {
     const Controller_Main = require(bun.globalPath.APP_PATH + app.path + "/controller/Main.js");
     const main = new Controller_Main();
     main.execute();
     return app;
 });
 
-// app公共类附在全局bun上，方便继承
-// 加一层class命名空间是担心用户app命名与bun自由属性冲突
-const registerGlobalClass = curry((app: any) => {
-    if (bun.isSingle) {
-        bun.class = app.class;
-    } else {
-        if (!bun.class) {
-            bun.class = {
-                [app.name]: app.class,
-            };
-        } else {
-            bun.class[app.name] = app.class;
-        }
-    }
-    return app;
-});
 
-export = (appName: string) => {
+export = (bun: IBun, appName: string): IApp => {
     return run(
-        runAppController,
-        registerGlobalClass,
-        // registerRal,
-        registerConfFun,
-        registerAppAttributes(mvcLoaderList),
-        initAppClass,
+        runAppController(bun),
+        setBun(bun),
+        // registerGlobalClass(bun),
+        // registerRal(bun),
+        registerConfFun(bun),
+        registerAppAttributes(bun, mvcLoaderList),
+        initAppClass(bun),
     )(appName);
 };

@@ -4,7 +4,7 @@ module.exports = async (ctx, next) => {
         await next();
     }
     catch (e) {
-        if (e instanceof Exception) {
+        if (e instanceof ctx.bun.Exception) {
             ctx.body = JSON.stringify({
                 code: e.code,
                 msg: e.msg
@@ -13,9 +13,8 @@ module.exports = async (ctx, next) => {
         else if (e instanceof Error) {
             ctx.status = 500;
             ctx.body = '500 服务器错误';
-            bun.Logger.error(e);
+            ctx.bun.Logger.error(e);
         }
     }
-    return;
 };
 //# sourceMappingURL=bun_catch_error.js.map

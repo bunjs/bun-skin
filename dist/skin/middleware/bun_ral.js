@@ -2,16 +2,17 @@
 module.exports = async (ctx, next) => {
     const url = ctx.request.path;
     let appContext;
-    if (bun.isSingle) {
-        appContext = bun.class.prototype;
+    if (ctx.isSingle) {
+        appContext = ctx.bun.app.class.prototype;
     }
     else {
         const apppathar = url.split('/');
         const appname = apppathar[1];
-        if (!bun.class[appname]) {
+        if (!ctx.bun.app[appname].class) {
             return next();
         }
-        appContext = bun.class[appname].prototype;
+        let apps = ctx.bun.app;
+        appContext = apps[appname].class.prototype;
     }
     const _ralcache = appContext.ral;
     appContext.ral = (serverName, options) => {

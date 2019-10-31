@@ -4,7 +4,7 @@ import fs = require('fs');
 import { resolve } from 'path';
 // const nunjucks = require('nunjucks');
 import pug = require('pug');
-
+import { IContext } from "../../types/interface";
 /**
  * See: http://mozilla.github.io/nunjucks/api.html#configure
  * @param  {[type]} path nunjucks configure path
@@ -16,19 +16,19 @@ export = (path: string, opts: any) => {
     opts = opts || {};
     const ext = '.' + (opts.ext || 'html');
     const render = pug.renderFile;
-    return function view(ctx: any, next: any) {
+    return function view(ctx: IContext, next: any) {
         if (ctx.render) { return next(); }
         
         // 渲染模板出html
         ctx.renderHtml = (_view: string, locals: any) => {
             let appPath: string;
-            if (bun.isSingle) {
+            if (ctx.bun.isSingle) {
                 appPath = '';
             } else {
                 const appname = _view.split('/')[0];
                 appPath = '/' + appname;
             }
-            const manifest = fs.readFileSync(bun.globalPath.ROOT_PATH + '/static'+ appPath +'/manifest.json');
+            const manifest = fs.readFileSync(ctx.bun.globalPath.ROOT_PATH + '/static'+ appPath +'/manifest.json');
             const state = Object.assign({}, ctx.state, locals, {staticSources: JSON.parse(manifest.toString())});
 
             return new Promise((res, rej) => {
@@ -41,13 +41,13 @@ export = (path: string, opts: any) => {
         // 渲染模板并渲染到页面
         ctx.render = (_view: string, locals: any) => {
             let appPath: string;
-            if (bun.isSingle) {
+            if (ctx.bun.isSingle) {
                 appPath = '';
             } else {
                 const appname = _view.split('/')[0];
                 appPath = '/' + appname;
             }
-            const manifest = fs.readFileSync(bun.globalPath.ROOT_PATH + '/static'+ appPath +'/manifest.json');
+            const manifest = fs.readFileSync(ctx.bun.globalPath.ROOT_PATH + '/static'+ appPath +'/manifest.json');
             const state = Object.assign({}, ctx.state, locals, {staticSources: JSON.parse(manifest.toString())});
 
             return new Promise((res, rej) => {

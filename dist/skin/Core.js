@@ -4,23 +4,30 @@ const bodyParser = require("koa-bodyparser");
 const serverStaic = require("koa-static");
 const config_1 = require("./config");
 const config_2 = require("./config");
-const Exception = require("./Exception.js");
-const initApp = require("./InitApp.js");
-const Loader_js_1 = require("./Loader.js");
-const catchError = require("./middleware/bun_catch_error.js");
-const ral = require("./middleware/bun_ral.js");
-const router = require("./middleware/bun_router.js");
-const views = require("./middleware/bun_view.js");
-const Plugin = require("./Plugin.js");
+const initApp = require("./InitApp");
+const catchError = require("./middleware/bun_catch_error");
+const ral = require("./middleware/bun_ral");
+const routerMiddleware = require("./middleware/bun_router");
+const views = require("./middleware/bun_view");
+const Plugin = require("./Plugin");
 const utils_1 = require("./utils");
-const utils_2 = require("./utils");
 module.exports = {
-    setException: utils_2.curry((bun) => {
-        global.Exception = Exception;
-        bun.emitter("setException");
+    setContext: utils_1.curry((bun) => {
+        bun.use((ctx, next) => {
+            ctx.bun = {
+                Loader: bun.Loader,
+                Logger: bun.Logger,
+                globalPath: bun.globalPath,
+                isSingle: bun.isSingle,
+                app: bun.app,
+                Exception: bun.Exception
+            };
+            return next();
+        });
+        bun.emitter("setContext");
         return bun;
     }),
-    setGlobalModule: utils_2.curry((bun) => {
+    setGlobalModule: utils_1.curry((bun) => {
         if (bun.isSingle) {
             let loaderList = [...config_2.mvcLoaderList];
             try {
@@ -30,7 +37,7 @@ module.exports = {
             catch (e) {
                 bun.Logger.bunwarn("App globalLoader not found ");
             }
-            Loader_js_1.getGlobalModule(loaderList, '');
+            bun.globalModule = bun.Loader.getGlobalModule(loaderList, '');
         }
         else {
             const files = fs.readdirSync(bun.globalPath.ROOT_PATH + "/app");
@@ -45,7 +52,7 @@ module.exports = {
                     catch (e) {
                         bun.Logger.bunwarn('App ' + filename + " globalLoader not found ");
                     }
-                    Loader_js_1.getGlobalModule(loaderList, filename);
+                    bun.globalModule[filename] = bun.Loader.getGlobalModule(loaderList, filename);
                 }
             });
         }
@@ -67,7 +74,7 @@ module.exports = {
                     module._compile(stripBOM(content), filename);
                     return;
                 }
-                let currentKey = Loader_js_1.getFuncName(filename.replace('.js', ''), bun.isSingle ? '/app' : '/app/' + appName);
+                let currentKey = bun.Loader.getFuncName(filename.replace('.js', ''), bun.isSingle ? '/app' : '/app/' + appName);
                 let str = '';
                 Object.entries(globalModule).forEach(([key, value]) => {
                     if (key === currentKey || content.indexOf(key) === -1) {
@@ -75,6 +82,9 @@ module.exports = {
                     }
                     str += 'const ' + key + ' = require("' + value + '");\n';
                 });
+                if (content.indexOf('extends App')) {
+                    str += 'const App = bun.app' + (appName ? '.' + appName : '') + '.class;\n';
+                }
                 content = str + '\n' + content;
             }
             module._compile(stripBOM(content), filename);
@@ -82,25 +92,24 @@ module.exports = {
         bun.emitter("setGlobalModule");
         return bun;
     }),
-    initAllApps: utils_2.curry((bun) => {
-        bun.app = {};
+    initAllApps: utils_1.curry((bun) => {
         if (bun.isSingle) {
-            bun.app = initApp('');
+            initApp(bun, '');
         }
         else {
             const files = fs.readdirSync(bun.globalPath.ROOT_PATH + "/app");
             files.forEach((filename) => {
                 const stat = fs.lstatSync(bun.globalPath.ROOT_PATH + "/app" + "/" + filename);
                 if (stat.isDirectory()) {
-                    bun.app[filename] = initApp(filename);
+                    initApp(bun, filename);
                 }
             });
         }
         bun.emitter("initApp", bun.app);
         return bun;
     }),
-    setLib: utils_2.curry((bun) => {
-        bun.Loader({
+    setLib: utils_1.curry((bun) => {
+        bun.Loader.loader({
             keypath: "lib",
             path: "/lib",
             context: bun.lib
@@ -108,12 +117,12 @@ module.exports = {
         bun.emitter("setLib", bun.lib);
         return bun;
     }),
-    setPlugins: utils_2.curry((bun) => {
-        Plugin();
+    setPlugins: utils_1.curry((bun) => {
+        Plugin(bun);
         bun.emitter("setPlugins", bun.plugins);
         return bun;
     }),
-    setRouter: utils_2.curry((bun) => {
+    setRouter: utils_1.curry((bun) => {
         const routes = new bun.Routes();
         if (bun.isSingle) {
             routes.mergeAppRoutes(bun.app.router.routesHandle);
@@ -123,11 +132,11 @@ module.exports = {
                 routes.mergeAppRoutes(value.router.routesHandle);
             });
         }
-        bun.use(router(routes.routesHandle));
+        bun.use(routerMiddleware(routes.routesHandle));
         bun.emitter("setRouter");
         return bun;
     }),
-    setReqLog: utils_2.curry((bun) => {
+    setReqLog: utils_1.curry((bun) => {
         bun.use(bun.Logger.log4js.koaLogger(bun.Logger.reqLog(), {
             format: "[:remote-addr :method :url :status :response-timems][:referrer HTTP/:http-version :user-agent]",
             level: "auto",
@@ -135,35 +144,34 @@ module.exports = {
         bun.emitter("setReqLog");
         return bun;
     }),
-    setServerStaic: utils_2.curry((bun) => {
+    setServerStaic: utils_1.curry((bun) => {
         bun.use(serverStaic(bun.globalPath.STATIC_PATH));
         bun.emitter("setServerStaic");
         return bun;
     }),
-    setBodyParser: utils_2.curry((bun) => {
+    setBodyParser: utils_1.curry((bun) => {
         bun.use(bodyParser());
         bun.emitter("setBodyParser");
         return bun;
     }),
-    setViews: utils_2.curry((bun) => {
+    setViews: utils_1.curry((bun) => {
         bun.use(views(bun.globalPath.TPL_PATH, {
             ext: config_1.viewExt,
         }));
         bun.emitter("setViews");
         return bun;
     }),
-    setErrHandle: utils_2.curry((bun) => {
+    setErrHandle: utils_1.curry((bun) => {
         bun.use(catchError);
         return bun;
     }),
-    setRal: utils_2.curry((bun) => {
+    setRal: utils_1.curry((bun) => {
         bun.use(ral);
         bun.emitter("setRal");
         return bun;
     }),
-    start: utils_2.curry((port, bun) => {
+    start: utils_1.curry((port, bun) => {
         bun.listen(port);
-        utils_1.deepFreeze(bun, "context");
         console.log("start on" + port);
         return bun;
     })

@@ -1,6 +1,7 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-global.bun = {};
-const Bootstrap = require("./skin/Bootstrap.js");
-exports.Bootstrap = Bootstrap;
+const Bun = require("./skin/Bun");
+exports.Bun = Bun;
+const exception = require("./skin/Exception.js");
+exports.exception = exception;
 //# sourceMappingURL=index.js.map

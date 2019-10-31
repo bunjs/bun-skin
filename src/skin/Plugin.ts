@@ -1,7 +1,10 @@
-import { Plugins } from "../interface";
-export = () => {
-    const pluginsConf: Plugins = require(bun.globalPath.CONF_PATH + "/plugins.js");
-    const context = bun.plugins;
+import {
+    IBun
+} from "../types/Bun";
+import { IPlugins } from "../types/interface";
+
+export = (bun: IBun) => {
+    const pluginsConf: IPlugins = require(bun.globalPath.CONF_PATH + "/plugins.js");
     let Model: any;
     for (const [key, value] of Object.entries(pluginsConf)) {
         if (value.enable) {
@@ -17,11 +20,11 @@ export = () => {
                 bun.Logger.bunerr(e);
             }
 
-            if (context[key]) {
+            if (bun.plugins[key]) {
                 // 如果模块已存在作用域中，则报警并覆盖
                 bun.Logger.bunwarn("Repeated plugin name: " + key + " in file: " + key);
             }
-            context[key] = (() => {
+            bun.plugins[key] = (() => {
                 return Model;
             })();
         }

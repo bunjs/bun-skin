@@ -8,33 +8,41 @@
  * @params String msg 异常描述
  * @params Function toString 返回异常描述
  */
+import { IBun } from "../types/Bun";
+import {
+    IException,
+    IExceptionArgs
+} from "../types/Exception";
 
-class Exception extends Error {
-    public name: string;
-    public level: string;
-    public code: string | number;
-    public msg: string;
-    constructor({ code = "000", msg = "程序异常", level = "error" }) {
-        super(msg);
-        this.name = "Exception";
-        this.level = level;
-        this.code = code;
-        this.msg = msg;
-        Error.captureStackTrace(this, this.constructor);
+export = (bun: IBun): typeof IException => {
+    class Exception extends Error {
+        public name: string;
+        public level: string;
+        public code: string | number;
+        public msg: string;
+        constructor(arg: IExceptionArgs) {
+            super();
+            const {level, code, msg} = arg;
+            this.name = "Exception";
+            this.level = level || "error";
+            this.code = code || '000';
+            this.msg = msg || "程序异常";
+            Error.captureStackTrace(this, this.constructor);
 
-        const errorToLogMap: any = {
-            info: () => bun.Logger.info(this.stack),
-            debug: () => bun.Logger.debug(this.stack),
-            error: () => bun.Logger.error(this.stack),
-            warn: () => bun.Logger.warn(this.stack),
-            fatal: () => bun.Logger.fatal(this.stack),
-            bunwarn: () => bun.Logger.bunwarn(this.stack),
-            bunerr: () => bun.Logger.bunerr(this.stack),
-        };
-        errorToLogMap[level]();
+            const errorToLogMap: any = {
+                info: () => bun.Logger.info(this.stack),
+                debug: () => bun.Logger.debug(this.stack),
+                error: () => bun.Logger.error(this.stack),
+                warn: () => bun.Logger.warn(this.stack),
+                fatal: () => bun.Logger.fatal(this.stack),
+                bunwarn: () => bun.Logger.bunwarn(this.stack),
+                bunerr: () => bun.Logger.bunerr(this.stack),
+            };
+            errorToLogMap[level]();
+        }
+        public toString() {
+            return this.msg;
+        }
     }
-    public toString() {
-        return this.msg;
-    }
-}
-export = Exception;
+    return Exception;
+};

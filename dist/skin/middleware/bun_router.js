@@ -1,7 +1,7 @@
 "use strict";
 module.exports = (routes) => {
     async function goNotfound(ctx) {
-        const Cb = require(bun.globalPath.APP_PATH + '/404.js');
+        const Cb = require(ctx.bun.globalPath.APP_PATH + '/404.js');
         const oCb = new Cb();
         oCb.beforeExecute && await oCb.beforeExecute.call(oCb, ctx);
         await oCb.execute.call(oCb, ctx);
@@ -23,24 +23,25 @@ module.exports = (routes) => {
                     const apppath = apppathar.slice(0, i).join('/') + '/*';
                     if (routes.get[apppath] && typeof routes.get[apppath] === 'function') {
                         await routes.get[apppath](ctx);
-                        return;
+                        return next();
                     }
                 }
                 await goNotfound(ctx);
-                return;
             }
             else if (typeof routes.get[url] !== 'function') {
                 await goNotfound(ctx);
-                return;
             }
-            await routes.get[url](ctx);
+            else {
+                await routes.get[url](ctx);
+            }
         }
         else if (ctx.method === 'POST') {
-            if (!routes.post[url] || typeof routes.post[url] !== 'function') {
-                await goNotfound(ctx);
-                return;
+            if (routes.post[url] && typeof routes.post[url] === 'function') {
+                await routes.post[url](ctx);
             }
-            await routes.post[url](ctx);
+            else {
+                await goNotfound(ctx);
+            }
         }
         else {
             ctx.throw(404, 'connot found');

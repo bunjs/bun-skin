@@ -6,18 +6,21 @@
  * @param  {[next]} 下一个中间件generator对象
  * @return {} 
  */
-export = async (ctx: any, next: any) => {
+import { IApps, IContext } from "../../types/interface";
+
+export = async (ctx: IContext, next: any) => {
     const url = ctx.request.path;
     let appContext: any;
-    if (bun.isSingle) {
-        appContext = bun.class.prototype;
+    if (ctx.isSingle) {
+        appContext = ctx.bun.app.class.prototype;
     } else {
         const apppathar = url.split('/');
-        const appname = apppathar[1];
-        if(!bun.class[appname]) {
+        const appname: string = apppathar[1];
+        if(!(ctx.bun.app as IApps)[appname].class) {
             return next();
         }
-        appContext = bun.class[appname].prototype;
+        const apps = ctx.bun.app as IApps;
+        appContext = apps[appname].class.prototype;
     }
     const _ralcache = appContext.ral;
     appContext.ral = (serverName: string, options: any) => {
@@ -27,6 +30,5 @@ export = async (ctx: any, next: any) => {
 
         return _ralcache(serverName, options);
     };
-
     return next();
 };

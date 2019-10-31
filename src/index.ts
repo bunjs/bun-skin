@@ -3,8 +3,9 @@
  * @since 1.0.0
  */
 
-(global as any).bun = {};
-import Bootstrap = require('./skin/Bootstrap.js');
+import Bun = require('./skin/Bun');
+import exception = require("./skin/Exception.js");
 export {
-    Bootstrap
+    Bun,
+    exception
 };

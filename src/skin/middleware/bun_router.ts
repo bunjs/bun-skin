@@ -1,13 +1,17 @@
+import { IContext } from "../../types/interface";
+import {
+    IRoutesHandle
+} from "../../types/Routes";
 
-export = (routes: any) => {
-    async function goNotfound(ctx: any) {
-        const Cb = require(bun.globalPath.APP_PATH + '/404.js');
+export = (routes: IRoutesHandle): any => {
+    async function goNotfound(ctx: IContext) {
+        const Cb = require(ctx.bun.globalPath.APP_PATH + '/404.js');
         const oCb = new Cb();
         oCb.beforeExecute && await oCb.beforeExecute.call(oCb, ctx);
         await oCb.execute.call(oCb, ctx);
         oCb.afterExecute && await oCb.afterExecute.call(oCb, ctx);
     }
-    return async (ctx: any, next: any): Promise<any> => {
+    return async (ctx: IContext, next: any) => {
         let url = ctx.request.path;
         if (ctx.method === 'GET') {
             if(url === '') {
@@ -20,28 +24,27 @@ export = (routes: any) => {
                 apppathar.push('/');
             }
             if (!routes.get[url]) {
+                
                 // 路由从后向前匹配/*，如url为/app/home,则先匹配/app/*，再匹配/*
                 for (let i = apppathar.length; i > 1; i--) {
                     const apppath = apppathar.slice(0, i).join('/') + '/*';
                     if (routes.get[apppath] && typeof routes.get[apppath] === 'function') {
                         await routes.get[apppath](ctx);
-                        return;
+                        return next();
                     }
                 }
                 await goNotfound(ctx);
-                return;
-            }
-            else if (typeof routes.get[url] !== 'function') {
+            } else if (typeof routes.get[url] !== 'function') {
                 await goNotfound(ctx);
-                return;
+            } else {
+                await routes.get[url](ctx);
             }
-            await routes.get[url](ctx);
         } else if (ctx.method === 'POST') {
-            if (!routes.post[url] || typeof routes.post[url] !== 'function') {
+            if (routes.post[url] && typeof routes.post[url] === 'function') {
+                await routes.post[url](ctx);
+            } else {
                 await goNotfound(ctx);
-                return;
             }
-            await routes.post[url](ctx);
         } else {
             ctx.throw(404, 'connot found');
         }
