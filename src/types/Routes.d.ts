@@ -1,11 +1,11 @@
-export interface IGETPOST {
+interface IGETPOST {
     [key: string]: any;
 }
-export interface IRoutesHandle {
+interface IRoutesHandle {
     get: IGETPOST;
     post: IGETPOST;
 }
-export class IRoutes {
+declare class IRoutes {
     public appName?: string;
     public routesHandle: IRoutesHandle;
     public get: (obj: IGETPOST) => void;
@@ -13,13 +13,7 @@ export class IRoutes {
     public mergeAppRoutes: (appRoutesHandle: IRoutesHandle) => void;
     // private initCallback: (path: string) => any;
 
-    constructor(appName?: string) {
-        this.appName = appName || "";
-        this.routesHandle = {
-            get: {},
-            post: {},
-        };
-    }
+    public constructor(appName?: string);
 }
 // export interface IRoutes {
 //     appName?: string;

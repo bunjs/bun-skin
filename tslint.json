@@ -10,6 +10,7 @@
         "no-empty-interface": false,
         "jsdoc-format": false,
         "no-redundant-jsdoc": false,
+        "no-reference": false,
         "no-unused-expression": [true, "allow-fast-null-checks"],
         "variable-name": [
             true,

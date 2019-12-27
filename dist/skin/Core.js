@@ -11,8 +11,9 @@ const routerMiddleware = require("./middleware/bun_router");
 const views = require("./middleware/bun_view");
 const Plugin = require("./Plugin");
 const utils_1 = require("./utils");
+const utils_2 = require("./utils");
 module.exports = {
-    setContext: utils_1.curry((bun) => {
+    setContext: utils_2.curry((bun) => {
         bun.use((ctx, next) => {
             ctx.bun = {
                 Loader: bun.Loader,
@@ -27,7 +28,7 @@ module.exports = {
         bun.emitter("setContext");
         return bun;
     }),
-    setGlobalModule: utils_1.curry((bun) => {
+    setGlobalModule: utils_2.curry((bun) => {
         if (bun.isSingle) {
             let loaderList = [...config_2.mvcLoaderList];
             try {
@@ -77,13 +78,13 @@ module.exports = {
                 let currentKey = bun.Loader.getFuncName(filename.replace('.js', ''), bun.isSingle ? '/app' : '/app/' + appName);
                 let str = '';
                 Object.entries(globalModule).forEach(([key, value]) => {
-                    if (key === currentKey || content.indexOf(key) === -1) {
+                    if (key === currentKey || content.indexOf(key) === -1 || /a[\s]*=[\s]*require\(/i.test(content)) {
                         return;
                     }
                     str += 'const ' + key + ' = require("' + value + '");\n';
                 });
-                if (content.indexOf('extends App')) {
-                    str += 'const App = bun.app' + (appName ? '.' + appName : '') + '.class;\n';
+                if (content.indexOf('extends BUN_App')) {
+                    str += 'const BUN_App = bun.app' + (appName ? '.' + appName : '') + '.class;\n';
                 }
                 content = str + '\n' + content;
             }
@@ -92,7 +93,7 @@ module.exports = {
         bun.emitter("setGlobalModule");
         return bun;
     }),
-    initAllApps: utils_1.curry((bun) => {
+    initAllApps: utils_2.curry((bun) => {
         if (bun.isSingle) {
             initApp(bun, '');
         }
@@ -108,7 +109,7 @@ module.exports = {
         bun.emitter("initApp", bun.app);
         return bun;
     }),
-    setLib: utils_1.curry((bun) => {
+    setLib: utils_2.curry((bun) => {
         bun.Loader.loader({
             keypath: "lib",
             path: "/lib",
@@ -117,12 +118,12 @@ module.exports = {
         bun.emitter("setLib", bun.lib);
         return bun;
     }),
-    setPlugins: utils_1.curry((bun) => {
+    setPlugins: utils_2.curry((bun) => {
         Plugin(bun);
         bun.emitter("setPlugins", bun.plugins);
         return bun;
     }),
-    setRouter: utils_1.curry((bun) => {
+    setRouter: utils_2.curry((bun) => {
         const routes = new bun.Routes();
         if (bun.isSingle) {
             routes.mergeAppRoutes(bun.app.router.routesHandle);
@@ -136,7 +137,7 @@ module.exports = {
         bun.emitter("setRouter");
         return bun;
     }),
-    setReqLog: utils_1.curry((bun) => {
+    setReqLog: utils_2.curry((bun) => {
         bun.use(bun.Logger.log4js.koaLogger(bun.Logger.reqLog(), {
             format: "[:remote-addr :method :url :status :response-timems][:referrer HTTP/:http-version :user-agent]",
             level: "auto",
@@ -144,34 +145,35 @@ module.exports = {
         bun.emitter("setReqLog");
         return bun;
     }),
-    setServerStaic: utils_1.curry((bun) => {
+    setServerStaic: utils_2.curry((bun) => {
         bun.use(serverStaic(bun.globalPath.STATIC_PATH));
         bun.emitter("setServerStaic");
         return bun;
     }),
-    setBodyParser: utils_1.curry((bun) => {
+    setBodyParser: utils_2.curry((bun) => {
         bun.use(bodyParser());
         bun.emitter("setBodyParser");
         return bun;
     }),
-    setViews: utils_1.curry((bun) => {
+    setViews: utils_2.curry((bun) => {
         bun.use(views(bun.globalPath.TPL_PATH, {
             ext: config_1.viewExt,
         }));
         bun.emitter("setViews");
         return bun;
     }),
-    setErrHandle: utils_1.curry((bun) => {
+    setErrHandle: utils_2.curry((bun) => {
         bun.use(catchError);
         return bun;
     }),
-    setRal: utils_1.curry((bun) => {
+    setRal: utils_2.curry((bun) => {
         bun.use(ral);
         bun.emitter("setRal");
         return bun;
     }),
-    start: utils_1.curry((port, bun) => {
+    start: utils_2.curry((port, bun) => {
         bun.listen(port);
+        utils_1.deepFreeze(bun, "context");
         console.log("start on" + port);
         return bun;
     })

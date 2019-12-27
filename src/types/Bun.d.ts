@@ -1,17 +1,7 @@
 import Koa = require("koa");
 import {
-    IException
-} from "./Exception";
-import {
-    IApp,
-    IApps,
-    IContext,
-    IGlobalPath,
-    ILoader
-} from "./interface";
-import {
-    IRoutes
-} from "./Routes";
+    IContext
+} from "./Context";
 
 export interface IBun extends Koa {
     name: string;
@@ -21,7 +11,8 @@ export interface IBun extends Koa {
     Loader: ILoader;
     plugins: any;
     lib: any;
-    app: IApps | IApp;
+    app?: IApp;
+    apps?: IApps;
     context: IContext;
     globalPath: IGlobalPath;
     globalModule: any;

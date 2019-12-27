@@ -6,7 +6,9 @@
  * @param  {[next]} 下一个中间件generator对象
  * @return {} 
  */
-import { IContext } from "../../types/interface";
+import {
+    IContext
+} from "../../types/Context";
 
 export = async (ctx: IContext, next: any) => {
     try {

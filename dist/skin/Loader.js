@@ -1,4 +1,4 @@
-"use strict";
+'use strict';
 const fs = require("fs");
 const utils = require("./utils");
 module.exports = (isSingle, Logger, globalPath) => {
@@ -24,7 +24,7 @@ module.exports = (isSingle, Logger, globalPath) => {
         let { keypath, path, context, type, ignore, isRequired, isGetMap } = obj;
         keypath = keypath || '';
         context = context || global;
-        type = type || "sync";
+        type = type || 'sync';
         ignore = ignore || [];
         isRequired = isRequired || false;
         isGetMap = isGetMap || false;
@@ -32,7 +32,7 @@ module.exports = (isSingle, Logger, globalPath) => {
         let key;
         if (!utils.fsExistsSync(path)) {
             if (isRequired) {
-                Logger.bunwarn("bun-loader: Loader not found " + path);
+                Logger.bunwarn('bun-loader: Loader not found ' + path);
             }
             return;
         }
@@ -49,14 +49,14 @@ module.exports = (isSingle, Logger, globalPath) => {
         }
         const files = fs.readdirSync(path);
         files.forEach((filename) => {
-            const stat = fs.lstatSync(path + "/" + filename);
+            const stat = fs.lstatSync(path + '/' + filename);
             if (stat.isDirectory()) {
-                if (ignore.indexOf(filename + "/") !== -1) {
+                if (ignore.indexOf(filename + '/') !== -1) {
                     return;
                 }
                 loader({
                     keypath,
-                    path: path.replace(globalPath.ROOT_PATH, "") + "/" + filename,
+                    path: path.replace(globalPath.ROOT_PATH, '') + '/' + filename,
                     context,
                     type,
                     ignore,
@@ -73,18 +73,18 @@ module.exports = (isSingle, Logger, globalPath) => {
             }
             key = getFuncName(path + '/' + filename, keypath);
             if (isGetMap) {
-                context[key] = path + "/" + filename;
+                context[key] = path + '/' + filename;
             }
             else {
-                initModule(context, key, path + "/" + filename, type);
+                initModule(context, key, path + '/' + filename, type);
             }
         });
     };
     function initModule(context, key, path, type) {
         let mod;
-        if (type === "async") {
+        if (type === 'async') {
             if (context[key]) {
-                Logger.bunwarn("bun-loader: Repeated method name: " + key + " in file: " + path);
+                Logger.bunwarn('bun-loader: Repeated method name: ' + key + ' in file: ' + path);
             }
             Object.defineProperty(context, key, {
                 get: () => {
@@ -92,10 +92,10 @@ module.exports = (isSingle, Logger, globalPath) => {
                     if (mod) {
                         return mod;
                     }
-                    Logger.bunwarn("bun-loader: module cannot find path is :" + path);
+                    Logger.bunwarn('bun-loader: module cannot find path is :' + path);
                 },
                 enumerable: true,
-                configurable: false,
+                configurable: false
             });
             return;
         }
@@ -106,7 +106,7 @@ module.exports = (isSingle, Logger, globalPath) => {
             })();
         }
         else {
-            Logger.bunwarn("bun-loader: module cannot find path is :" + path);
+            Logger.bunwarn('bun-loader: module cannot find path is :' + path);
         }
     }
     function loadModule(path) {
@@ -115,20 +115,20 @@ module.exports = (isSingle, Logger, globalPath) => {
             mod = require(path);
         }
         catch (e) {
-            Logger.bunerr("bun-loader: " + e);
+            Logger.bunerr('bun-loader: ' + e);
         }
         return mod;
     }
     const getFuncName = (path, keypath) => {
-        let newpath = path.replace(globalPath.ROOT_PATH, "");
-        newpath = newpath.replace('.js', "");
+        let newpath = path.replace(globalPath.ROOT_PATH, '');
+        newpath = newpath.replace('.js', '');
         if (keypath === newpath) {
-            newpath = "";
+            newpath = '';
         }
         else {
-            newpath = newpath.replace(keypath + "/", "");
+            newpath = newpath.replace(keypath + '/', '');
         }
-        const patharr = newpath.split("/");
+        const patharr = newpath.split('/');
         const arr = [];
         for (const item of patharr) {
             if (!item) {
@@ -138,7 +138,7 @@ module.exports = (isSingle, Logger, globalPath) => {
                 return s.toUpperCase();
             }));
         }
-        return arr.join("_");
+        return arr.join('_');
     };
     return {
         getFuncName,

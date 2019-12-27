@@ -9,10 +9,6 @@
  * @params Function toString 返回异常描述
  */
 import { IBun } from "../types/Bun";
-import {
-    IException,
-    IExceptionArgs
-} from "../types/Exception";
 
 export = (bun: IBun): typeof IException => {
     class Exception extends Error {

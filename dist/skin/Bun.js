@@ -24,15 +24,15 @@ class Bun extends Koa {
         this.Routes = routes(this.isSingle, this.globalPath);
         this.Exception = exception(this);
         this.plugins = {};
-        this.app = {};
+        this.apps = {};
         this.lib = {};
         this.globalModule = {};
-        const Module = require("module");
-        Module._extensions[".less"] = (module, fn) => {
-            return "";
+        const Module = require('module');
+        Module._extensions['.less'] = (module, fn) => {
+            return '';
         };
-        Module._extensions[".css"] = (module, fn) => {
-            return "";
+        Module._extensions['.css'] = (module, fn) => {
+            return '';
         };
     }
     emitter(eventName, freeze) {
@@ -43,7 +43,7 @@ class Bun extends Koa {
     }
     bootstrap() {
         try {
-            utils_2.run(core.start(this.port), core.setPlugins, core.setRouter, core.initAllApps, core.setGlobalModule, core.setLib, core.setViews, core.setBodyParser, core.setServerStaic, core.setRal, core.setReqLog, core.setErrHandle, core.setContext)(this);
+            utils_2.run(core.start(this.port), core.setPlugins, core.setRouter, core.initAllApps, core.setLib, core.setViews, core.setBodyParser, core.setServerStaic, core.setRal, core.setReqLog, core.setErrHandle, core.setContext)(this);
         }
         catch (e) {
             this.Logger.bunerr(e);

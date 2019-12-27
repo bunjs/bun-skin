@@ -2,7 +2,7 @@
 module.exports = async (ctx, next) => {
     const url = ctx.request.path;
     let appContext;
-    if (ctx.isSingle) {
+    if (ctx.bun.isSingle) {
         appContext = ctx.bun.app.class.prototype;
     }
     else {
@@ -11,7 +11,7 @@ module.exports = async (ctx, next) => {
         if (!ctx.bun.app[appname].class) {
             return next();
         }
-        let apps = ctx.bun.app;
+        const apps = ctx.bun.app;
         appContext = apps[appname].class.prototype;
     }
     const _ralcache = appContext.ral;

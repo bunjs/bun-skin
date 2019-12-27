@@ -1,14 +1,11 @@
 import {
     IBun
 } from "../types/Bun";
-import { IContext } from "../types/interface";
 import {
-    IGETPOST,
-    IRoutes, 
-    IRoutesHandle
-} from "../types/Routes";
+    IContext
+} from "../types/Context";
 
-export = (isSingle: boolean, globalPath: any): typeof IRoutes => {
+export = (isSingle: boolean, globalPath: IGlobalPath): typeof IRoutes => {
     class Routes {
         public appName?: string;
         public routesHandle: IRoutesHandle;

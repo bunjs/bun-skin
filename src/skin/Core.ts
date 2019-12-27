@@ -7,13 +7,6 @@ import {
     IBun
 } from "../types/Bun";
 import {
-    IApp,
-    IApps
-} from "../types/interface";
-import {
-    IRoutes
-} from "../types/Routes";
-import {
     defaultPort,
     viewExt
 } from "./config";
@@ -103,14 +96,14 @@ export = {
 	            let currentKey = bun.Loader.getFuncName(filename.replace('.js', ''), bun.isSingle ? '/app' : '/app/' + appName);
 	            let str = '';
 	            Object.entries(globalModule).forEach(([key, value]) => {
-	            	// 过滤自身名字 以及 未引用的名字
-	            	if (key === currentKey || content.indexOf(key) === -1) {
+	            	// 过滤自身名字、已require引入的名字 以及 未引用的名字
+	            	if (key === currentKey || content.indexOf(key) === -1 || /a[\s]*=[\s]*require\(/i.test(content)) {
 	            		return;
 	            	}
 	                str += 'const ' + key + ' = require("'+ value + '");\n';
 	            });
-	            if(content.indexOf('extends App')) {
-	            	 str += 'const App = bun.app'+ (appName ? '.' + appName : '') + '.class;\n';
+	            if(content.indexOf('extends BUN_App')) {
+	            	 str += 'const BUN_App = bun.app'+ (appName ? '.' + appName : '') + '.class;\n';
 	            }
 	            content = str + '\n' + content;
 	        }
@@ -180,7 +173,7 @@ export = {
     setRouter: curry((bun: IBun) => {
         const routes = new bun.Routes();
         if(bun.isSingle) {
-            routes.mergeAppRoutes(bun.app.router.routesHandle);
+            routes.mergeAppRoutes((bun.app as IApp).router.routesHandle);
         } else {
             Object.entries(bun.app).forEach(([key, value]) => {
                 routes.mergeAppRoutes(value.router.routesHandle);
@@ -279,7 +272,7 @@ export = {
     start: curry((port: string | number, bun: IBun) => {
         bun.listen(port);
         // 冻结bun对象，只读，防止用户错误覆盖
-        // deepFreeze(bun, "context");
+        deepFreeze(bun, "context");
         console.log("start on" + port);
         return bun;
     })

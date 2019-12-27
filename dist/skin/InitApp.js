@@ -11,27 +11,28 @@ const initAppClass = utils_1.curry((bun, name) => {
             this.Routes = routes;
             this.appName = name || '';
         }
+        execute() {
+        }
     }
     return {
         name: name || '',
-        path: name ? ('/' + name) : '',
+        path: name ? '/' + name : '',
         class: App,
-        router: routes,
+        router: routes
     };
 });
 const registerConfFun = utils_1.curry((bun, app) => {
     const context = app.class.prototype;
     const getConfPath = utils_1.curry((name, appendApp, filename) => {
-        let path = bun.globalPath.CONF_PATH + app.path +
-            (appendApp ? "/app/" : "/") + filename;
-        const pos = filename.lastIndexOf(".");
+        let path = bun.globalPath.CONF_PATH + app.path + (appendApp ? '/app/' : '/') + filename;
+        const pos = filename.lastIndexOf('.');
         if (pos === -1) {
-            path = path + ".js";
+            path = path + '.js';
         }
         else {
             const filePostfix = filename.substr(pos + 1);
-            if (filePostfix !== "js") {
-                throw new bun.Exception(Object.assign({}, config_1.err.ERROR_APP_CONNOT_LOAD_NOJS_FILE, { msg: "connot load ." + filePostfix + " please instead of .js" }));
+            if (filePostfix !== 'js') {
+                throw new bun.Exception(Object.assign({}, config_1.err.ERROR_APP_CONNOT_LOAD_NOJS_FILE, { msg: 'connot load .' + filePostfix + ' please instead of .js' }));
             }
         }
         return path;
@@ -53,21 +54,25 @@ const registerRal = utils_1.curry((bun, app) => {
         confDir: path.join(bun.globalPath.CONF_PATH, app.name + '/ral'),
         logger: {
             log_path: bun.globalPath.LOG_PATH + '/ral',
-            app: 'bun-ral',
-        },
+            app: 'bun-ral'
+        }
     });
     context.ral = ralP;
     return app;
 });
 const registerAppAttributes = utils_1.curry((bun, loaderListConf, app) => {
-    const appLoaderConf = require(bun.globalPath.CONF_PATH + app.path + '/globalLoader');
+    let appLoaderConf = [];
+    const appLoaderConfPath = bun.globalPath.CONF_PATH + app.path + '/globalLoader';
+    if (utils_1.fsExistsSync(appLoaderConfPath)) {
+        appLoaderConf = require(appLoaderConfPath);
+    }
     [...appLoaderConf, ...loaderListConf].map((loaderConf) => {
         bun.Loader.loader({
             keypath: '/app' + app.path,
             path: '/app' + app.path + loaderConf.path,
             context: app.class.prototype,
-            type: "async",
-            isRequired: loaderConf.isRequired,
+            type: 'async',
+            isRequired: loaderConf.isRequired
         });
     });
     return app;
@@ -77,12 +82,12 @@ const setBun = utils_1.curry((bun, app) => {
         bun.app = app;
     }
     else {
-        bun.app[app.name] = app;
+        bun.apps[app.name] = app;
     }
     return app;
 });
 const runAppController = utils_1.curry((bun, app) => {
-    const Controller_Main = require(bun.globalPath.APP_PATH + app.path + "/controller/Main.js");
+    const Controller_Main = require(bun.globalPath.APP_PATH + app.path + '/controller/Main.js');
     const main = new Controller_Main();
     main.execute();
     return app;

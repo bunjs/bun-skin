@@ -1,15 +1,12 @@
-"use strict";
+'use strict';
 
 /**
  * @file Loader全局方法
  */
 
-import fs = require("fs");
-import {
-    IBun
-} from "../types/Bun";
-import { ILoader, ILoaderParams } from "../types/interface";
-import utils = require("./utils");
+import fs = require('fs');
+import { IBun } from '../types/Bun';
+import utils = require('./utils');
 export = (isSingle: boolean, Logger: any, globalPath: any): ILoader => {
     /**
      * 获取全局类的映射方法
@@ -39,7 +36,7 @@ export = (isSingle: boolean, Logger: any, globalPath: any): ILoader => {
     const getGlobalModule = (loadList: any, appName?: string) => {
         let map: any = {};
         loadList.forEach((item: ILoaderParams) => {
-            map = {...map, ...getGlobalModuleByPath(item, appName || '')};
+            map = { ...map, ...getGlobalModuleByPath(item, appName || '') };
         });
         return map;
     };
@@ -59,7 +56,7 @@ export = (isSingle: boolean, Logger: any, globalPath: any): ILoader => {
         let { keypath, path, context, type, ignore, isRequired, isGetMap } = obj;
         keypath = keypath || '';
         context = context || global;
-        type = type || "sync";
+        type = type || 'sync';
         ignore = ignore || [];
         isRequired = isRequired || false;
         isGetMap = isGetMap || false;
@@ -69,7 +66,7 @@ export = (isSingle: boolean, Logger: any, globalPath: any): ILoader => {
         if (!utils.fsExistsSync(path)) {
             // 如果必要且找不到对应目录，则报警
             if (isRequired) {
-                Logger.bunwarn("bun-loader: Loader not found " + path);
+                Logger.bunwarn('bun-loader: Loader not found ' + path);
             }
             return;
         }
@@ -78,7 +75,7 @@ export = (isSingle: boolean, Logger: any, globalPath: any): ILoader => {
         if (fstat.isFile()) {
             // 对文件进行直接引入操作
             key = getFuncName(path, keypath);
-            if(isGetMap) {
+            if (isGetMap) {
                 context[key] = path;
             } else {
                 initModule(context, key, path, type);
@@ -88,16 +85,16 @@ export = (isSingle: boolean, Logger: any, globalPath: any): ILoader => {
 
         const files = fs.readdirSync(path);
         files.forEach((filename) => {
-            const stat = fs.lstatSync(path + "/" + filename);
+            const stat = fs.lstatSync(path + '/' + filename);
             if (stat.isDirectory()) {
                 // 命中ignore 则直接跳过
-                if (ignore.indexOf(filename + "/") !== -1) {
+                if (ignore.indexOf(filename + '/') !== -1) {
                     return;
                 }
                 // 是文件夹继续循环
                 loader({
                     keypath,
-                    path: path.replace(globalPath.ROOT_PATH, "") + "/" + filename,
+                    path: path.replace(globalPath.ROOT_PATH, '') + '/' + filename,
                     context,
                     type,
                     ignore,
@@ -116,21 +113,21 @@ export = (isSingle: boolean, Logger: any, globalPath: any): ILoader => {
                 return;
             }
 
-            key = getFuncName(path + '/' + filename, keypath, );
-            if(isGetMap) {
-                context[key] = path + "/" + filename;
+            key = getFuncName(path + '/' + filename, keypath);
+            if (isGetMap) {
+                context[key] = path + '/' + filename;
             } else {
-                initModule(context, key, path + "/" + filename, type);
+                initModule(context, key, path + '/' + filename, type);
             }
         });
     };
     // 定义模块
     function initModule(context: any, key: string, path: string, type?: string) {
         let mod: any;
-        if (type === "async") {
+        if (type === 'async') {
             if (context[key]) {
                 // 如果模块已存在作用域中，则报警并覆盖
-                Logger.bunwarn("bun-loader: Repeated method name: " + key + " in file: " + path);
+                Logger.bunwarn('bun-loader: Repeated method name: ' + key + ' in file: ' + path);
             }
             /**
              * 这里使用Object.defineProperty实现异步调用模块，只当模块被调用时，才加载
@@ -142,10 +139,10 @@ export = (isSingle: boolean, Logger: any, globalPath: any): ILoader => {
                     if (mod) {
                         return mod;
                     }
-                    Logger.bunwarn("bun-loader: module cannot find path is :" + path);
+                    Logger.bunwarn('bun-loader: module cannot find path is :' + path);
                 },
                 enumerable: true,
-                configurable: false,
+                configurable: false
             });
             return;
         }
@@ -155,7 +152,7 @@ export = (isSingle: boolean, Logger: any, globalPath: any): ILoader => {
                 return mod;
             })();
         } else {
-            Logger.bunwarn("bun-loader: module cannot find path is :" + path);
+            Logger.bunwarn('bun-loader: module cannot find path is :' + path);
         }
     }
 
@@ -164,7 +161,7 @@ export = (isSingle: boolean, Logger: any, globalPath: any): ILoader => {
         try {
             mod = require(path);
         } catch (e) {
-            Logger.bunerr("bun-loader: " + e);
+            Logger.bunerr('bun-loader: ' + e);
         }
         return mod;
     }
@@ -174,30 +171,32 @@ export = (isSingle: boolean, Logger: any, globalPath: any): ILoader => {
      *
      * 规则：文件全路径-keypath
      * 如：path:app/example/action/api/home, keypath: app/example/
-     * 则拼出来的方法名为：Action_Api_Home
+     * 则拼出来的方法名为：BUN_Action_Api_Home
      * @return string
      */
     const getFuncName = (path: string, keypath: string): string => {
-        let newpath = path.replace(globalPath.ROOT_PATH, "");
-        newpath = newpath.replace('.js', "");
+        let newpath = path.replace(globalPath.ROOT_PATH, '');
+        newpath = newpath.replace('.js', '');
         if (keypath === newpath) {
-            newpath = "";
+            newpath = '';
         } else {
-            newpath = newpath.replace(keypath + "/", "");
+            newpath = newpath.replace(keypath + '/', '');
         }
 
-        const patharr = newpath.split("/");
+        const patharr = newpath.split('/');
         const arr = [];
         for (const item of patharr) {
             if (!item) {
                 continue;
             }
             // 首字母大写
-            arr.push(item.replace(/^\S/g, (s) => {
-                return s.toUpperCase();
-            }));
+            arr.push(
+                item.replace(/^\S/g, (s) => {
+                    return s.toUpperCase();
+                })
+            );
         }
-        return arr.join("_");
+        return arr.join('_');
     };
     return {
         getFuncName,

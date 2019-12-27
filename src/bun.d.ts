@@ -1,38 +1,26 @@
-import Koa = require("koa");
-import {
-    IException
-} from "./types/Exception";
-import {
-    IApp,
-    IApps,
-    IContext,
-    IGlobalPath,
-    ILoader
-} from "./types/interface";
-import {
-    IRoutes
-} from "./types/Routes";
+/// <reference path="./types/Routes.d.ts" />
+/// <reference path="./types/Exception.d.ts" />
+/// <reference path="./types/interface.d.ts" />
+/// <reference path="./types/App.d.ts" />
+declare class Bun {
+    public name: string;
+    public Logger: any;
+    public Routes: IRoutes;
+    public use: any;
+    public Loader: ILoader;
+    public plugins: any;
+    public lib: object;
+    public app?: IApp;
+    public apps?: IApps;
+    public context: any;
+    public globalPath: IGlobalPath;
+    public globalModule: any;
+    public isSingle: boolean;
+    public port: number | string;
+    public Exception: IException;
 
-declare module 'bun' {
-    export class Bun extends Koa {
-        public name: string;
-        public Logger: any;
-        public Routes: IRoutes;
-        public use: any;
-        public Loader: ILoader;
-        public plugins: object;
-        public lib: object;
-        public app: IApps | IApp;
-        public context: IContext;
-        public globalPath: IGlobalPath;
-        public globalModule: any;
-        public isSingle: boolean;
-        public port: number | string;
-        public Exception: IException;
+    public constructor(name: string, options: IParams);
 
-        public emitter(eventName: string, freeze? : any): void;
-        public bootstrap(): void;
-    }
-    export function exception (bun: Bun): IException;
-    
+    public emitter(eventName: string, freeze? : any): void;
+    public bootstrap(): void;
 }

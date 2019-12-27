@@ -4,8 +4,4 @@
  */
 
 import Bun = require('./skin/Bun');
-import exception = require("./skin/Exception.js");
-export {
-    Bun,
-    exception
-};
+(global as any).Bun = Bun;

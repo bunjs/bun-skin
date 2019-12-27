@@ -1,32 +1,15 @@
-import Koa = require("koa");
-import path = require("path");
-import {
-    IException
-} from "../types/Exception";
-import {
-    IApp,
-    IApps,
-    IContext,
-    IGlobalPath,
-    ILoader,
-    IParams,
-} from "../types/interface";
-import {
-    IRoutes
-} from "../types/Routes";
-import {
-    globalPath,
-} from "./config";
-import core = require("./Core");
-import emitter = require("./event");
-import exception = require("./Exception");
-import Loader = require("./Loader");
-import Logger = require("./Logger");
-import routes = require("./Routes");
-import {
-    deepFreeze
-} from "./utils";
-import { run } from "./utils";
+import Koa = require('koa');
+import path = require('path');
+import { IContext } from '../types/Context';
+import { globalPath } from './config';
+import core = require('./Core');
+import emitter = require('./event');
+import exception = require('./Exception');
+import Loader = require('./Loader');
+import Logger = require('./Logger');
+import routes = require('./Routes');
+import { deepFreeze } from './utils';
+import { run } from './utils';
 
 class Bun extends Koa {
     public name: string;
@@ -36,7 +19,8 @@ class Bun extends Koa {
     public Loader: ILoader;
     public plugins: object;
     public lib: object;
-    public app: IApps | IApp;
+    public app?: IApp;
+    public apps?: IApps;
     public context: IContext;
     public globalPath: IGlobalPath;
     public globalModule: any;
@@ -44,11 +28,11 @@ class Bun extends Koa {
     public port: number | string;
     public Exception: typeof IException;
     /**
-	 * 接受参数
-	 * @params name bun
-	 * @params ROOT_PATH app根目录执行路径
-	 * @params port 启动端口号 默认4000
-	 */
+     * 接受参数
+     * @params name bun
+     * @params ROOT_PATH app根目录执行路径
+     * @params port 启动端口号 默认4000
+     */
     constructor(name: string, options: IParams) {
         super();
         this.name = name;
@@ -68,26 +52,26 @@ class Bun extends Koa {
         this.Routes = routes(this.isSingle, this.globalPath);
         this.Exception = exception(this);
         this.plugins = {};
-        this.app = {};
+        this.apps = {};
         this.lib = {};
         this.globalModule = {};
         // 解决后端渲染前端资源时遇到css相关文件报错的问题
-        const Module = require("module");
-        Module._extensions[".less"] = (module: any, fn: any) => {
-            return "";
+        const Module = require('module');
+        Module._extensions['.less'] = (module: any, fn: any) => {
+            return '';
         };
-        Module._extensions[".css"] = (module: any, fn: any) => {
-            return "";
+        Module._extensions['.css'] = (module: any, fn: any) => {
+            return '';
         };
         // 冻结第一层bun对象，只读，防止用户错误覆盖
         // Object.freeze(this);
     }
 
     /**
-	 * 冻结指定目录
-	 * 并发布事件，防止生命周期里用户覆盖bun对象
-	 */
-    public emitter(eventName: string, freeze? : any) {
+     * 冻结指定目录
+     * 并发布事件，防止生命周期里用户覆盖bun对象
+     */
+    public emitter(eventName: string, freeze?: any) {
         if (freeze) {
             deepFreeze(freeze);
         }
@@ -105,7 +89,7 @@ class Bun extends Koa {
                 core.setPlugins,
                 core.setRouter,
                 core.initAllApps,
-                core.setGlobalModule,
+                // core.setGlobalModule,
                 core.setLib,
                 core.setViews,
                 core.setBodyParser,

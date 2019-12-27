@@ -4,19 +4,19 @@
  * 捕获全局错误
  * @param  {[ctx]} 请求上下文
  * @param  {[next]} 下一个中间件generator对象
- * @return {} 
+ * @return {}
  */
-import { IApps, IContext } from "../../types/interface";
+import { IContext } from '../../types/Context';
 
 export = async (ctx: IContext, next: any) => {
     const url = ctx.request.path;
     let appContext: any;
-    if (ctx.isSingle) {
-        appContext = ctx.bun.app.class.prototype;
+    if (ctx.bun.isSingle) {
+        appContext = (ctx.bun.app as IApp).class.prototype;
     } else {
         const apppathar = url.split('/');
         const appname: string = apppathar[1];
-        if(!(ctx.bun.app as IApps)[appname].class) {
+        if (!(ctx.bun.app as IApps)[appname].class) {
             return next();
         }
         const apps = ctx.bun.app as IApps;

@@ -4,7 +4,9 @@ import fs = require('fs');
 import { resolve } from 'path';
 // const nunjucks = require('nunjucks');
 import pug = require('pug');
-import { IContext } from "../../types/interface";
+import {
+    IContext
+} from "../../types/Context";
 /**
  * See: http://mozilla.github.io/nunjucks/api.html#configure
  * @param  {[type]} path nunjucks configure path
